@@ -8,7 +8,7 @@
 
 *Transjakarta · Mikrotrans · KRL · MRT · LRT · Airport Rail · Whoosh · ride-hailing, in one route*
 
-[![Release](https://img.shields.io/github/v/release/vickyvam72/LumiTransportation?label=release&color=1565D8&style=for-the-badge)](https://github.com/vickyvam72/LumiTransportation/releases/latest)
+[![Release](https://img.shields.io/github/v/release/VAMvicky/LumiTransport?label=release&color=1565D8&style=for-the-badge)](https://github.com/VAMvicky/LumiTransport/releases/latest)
 [![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#-requirements)
 [![Java](https://img.shields.io/badge/Java-WebView-38BDF8?style=for-the-badge&logo=openjdk&logoColor=white)](#%EF%B8%8F-tech-stack)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=for-the-badge)](LICENSE)
@@ -154,7 +154,7 @@ Sources are listed in the [Indonesian README](README.md#-tarif-yang-dipakai).
 
 ## ⬇️ Download & Install
 
-1. Open the **[Releases](https://github.com/vickyvam72/LumiTransportation/releases/latest)** page.
+1. Open the **[Releases](https://github.com/VAMvicky/LumiTransport/releases/latest)** page.
 2. Under **Assets**, download `LumiTransportation-v2.3.apk`.
 3. Open the downloaded file. If Android asks, allow **"Install unknown apps"** for your browser or file manager.
 4. Tap **Install**. Done! 🎉
@@ -252,8 +252,8 @@ Fares are estimates based on published rules (see [Fares used](#-fares-used)). P
 Lumi builds **without Gradle**, using `aapt2`, `ecj`, `d8` and `apksigner`:
 
 ```bash
-git clone https://github.com/vickyvam72/LumiTransportation.git
-cd LumiTransportation
+git clone https://github.com/VAMvicky/LumiTransport.git
+cd LumiTransport
 export ANDROID_JAR=$ANDROID_HOME/platforms/android-34/android.jar
 export AAPT2=$ANDROID_HOME/build-tools/34.0.0/aapt2
 export D8_JAR=$ANDROID_HOME/build-tools/34.0.0/lib/d8.jar
@@ -300,7 +300,7 @@ Travel times and fares are **estimates**. Always check operator announcements fo
 
 ## 📄 License
 
-Copyright © 2026 **vickyvam72**.
+Copyright © 2026 **VAMvicky**.
 
 Lumi Transportation is free and open-source software, released under the **[GNU General Public License v3.0](LICENSE)**.
 You may use, study, modify and redistribute it, provided derivative works are released under the same licence (GPL-3.0) with their source code open.

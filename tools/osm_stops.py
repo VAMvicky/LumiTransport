@@ -18,7 +18,7 @@ import json, math, re, sys, urllib.request, urllib.parse, datetime, os
 
 BBOX = (-6.80, 106.35, -5.95, 107.25)   # selatan, barat, utara, timur (Jabodetabek)
 OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
-UA = "LumiTransportation-stopfix/1.0 (+https://github.com/vickyvam72/LumiTransportation)"
+UA = "LumiTransportation-stopfix/1.0 (+https://github.com/VAMvicky/LumiTransport)"
 RAIL_MODES = {"KRL", "MRT", "LRT", "LRTJ", "KABANDARA", "WHOOSH"}
 # Nama di data Lumi yang berbeda dengan nama di OSM
 ALIAS = {"tmii": ["taman mini", "taman mini indonesia indah"], "bni city": ["sudirman baru"],

@@ -14,7 +14,7 @@ Pakai:  python3 tools/route_watch.py [--zip file_gtfs.zip] [--data data]
 import argparse, csv, datetime, hashlib, io, json, os, sys, urllib.request, zipfile
 
 GTFS_URL = "https://gtfs.transjakarta.co.id/files/file_gtfs.zip"
-UA = "LumiTransportation-RouteWatch/2.0 (+https://github.com/vickyvam72/LumiTransportation)"
+UA = "LumiTransportation-RouteWatch/2.0 (+https://github.com/VAMvicky/LumiTransport)"
 
 
 def read_csv(z, name):

@@ -8,7 +8,7 @@
 
 *Transjakarta · Mikrotrans · KRL · MRT · LRT · KA Bandara · Whoosh · ojol, dalam satu rute*
 
-[![Rilis](https://img.shields.io/github/v/release/vickyvam72/LumiTransportation?label=rilis&color=1565D8&style=for-the-badge)](https://github.com/vickyvam72/LumiTransportation/releases/latest)
+[![Rilis](https://img.shields.io/github/v/release/VAMvicky/LumiTransport?label=rilis&color=1565D8&style=for-the-badge)](https://github.com/VAMvicky/LumiTransport/releases/latest)
 [![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#-kebutuhan-sistem)
 [![Java](https://img.shields.io/badge/Java-WebView-38BDF8?style=for-the-badge&logo=openjdk&logoColor=white)](#%EF%B8%8F-teknologi)
 [![Lisensi](https://img.shields.io/badge/lisensi-GPL--3.0-blue?style=for-the-badge)](LICENSE)
@@ -171,7 +171,7 @@ Diperbarui **29 Oktober 2026**. Tarif adalah perkiraan; selalu cek pengumuman op
 
 ## ⬇️ Unduh & Pasang
 
-1. Buka halaman **[Releases](https://github.com/vickyvam72/LumiTransportation/releases/latest)**.
+1. Buka halaman **[Releases](https://github.com/VAMvicky/LumiTransport/releases/latest)**.
 2. Di bagian **Assets**, unduh `LumiTransportation-v2.3.apk`.
 3. Buka file yang sudah diunduh. Kalau Android meminta, izinkan **"Instal aplikasi tidak dikenal"** untuk browser atau pengelola file yang kamu pakai.
 4. Tekan **Instal**. Selesai! 🎉
@@ -310,8 +310,8 @@ build.sh                      # Build APK tanpa Gradle
 Lumi dibangun **tanpa Gradle** memakai `aapt2`, `ecj`, `d8`, dan `apksigner`:
 
 ```bash
-git clone https://github.com/vickyvam72/LumiTransportation.git
-cd LumiTransportation
+git clone https://github.com/VAMvicky/LumiTransport.git
+cd LumiTransport
 # isi variabel berikut (atau taruh file-nya di tools/sdk/)
 export ANDROID_JAR=$ANDROID_HOME/platforms/android-34/android.jar
 export AAPT2=$ANDROID_HOME/build-tools/34.0.0/aapt2
@@ -363,7 +363,7 @@ Waktu tempuh dan tarif adalah **perkiraan**. Selalu cek pengumuman operator untu
 
 ## 📄 Lisensi
 
-Hak cipta © 2026 **vickyvam72**.
+Hak cipta © 2026 **VAMvicky**.
 
 Lumi Transportation adalah perangkat lunak bebas dan open source, dirilis di bawah **[GNU General Public License v3.0](LICENSE)**.
 Kamu boleh memakai, mempelajari, mengubah, dan membagikan ulang Lumi Transportation, dengan syarat versi turunannya juga dirilis dengan lisensi yang sama (GPL-3.0) dan kode sumbernya tetap terbuka.

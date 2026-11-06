@@ -12,3 +12,7 @@ tools/sdk/
 keystore/
 *.jks
 *.keystore
+
+# kunci penandatangan APK: jangan pernah di-commit
+*.keystore
+*.jks

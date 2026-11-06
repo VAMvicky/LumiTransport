@@ -2096,7 +2096,7 @@
     var last = 0; try { last = +localStorage.getItem("lumi:stopfixAt") || 0; } catch (e) { }
     if (Date.now() - last < 3 * 864e5) return;
     setTimeout(function () {
-      http("https://raw.githubusercontent.com/vickyvam72/LumiTransportation/main/data/stop_fix.json", 20000).then(function (j) {
+      http("https://raw.githubusercontent.com/VAMvicky/LumiTransport/main/data/stop_fix.json", 20000).then(function (j) {
         try { localStorage.setItem("lumi:stopfixAt", String(Date.now())); } catch (e) { }
         if (j && j.v === 2 && j.fix) { try { localStorage.setItem("lumi:stopfix", JSON.stringify(j)); } catch (e) { } }
       }).catch(function () { });

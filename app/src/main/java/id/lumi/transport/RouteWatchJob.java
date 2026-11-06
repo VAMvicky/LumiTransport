@@ -23,7 +23,7 @@ import java.util.List;
  */
 public class RouteWatchJob extends JobService {
     static final int JOB_ID = 4243;
-    static final String FEED = "https://raw.githubusercontent.com/vickyvam72/LumiTransportation/main/data/route_changes.json";
+    static final String FEED = "https://raw.githubusercontent.com/VAMvicky/LumiTransport/main/data/route_changes.json";
     private Thread worker;
 
     public static void schedule(Context ctx) {
