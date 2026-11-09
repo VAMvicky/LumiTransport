@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Lumi Transport</string>
+    <string name="tile_label">Cari rute</string>
+
+    <string name="sc_search_short">Cari rute</string>
+    <string name="sc_search_long">Cari rute dari Lumi</string>
+    <string name="sc_history_short">Riwayat</string>
+    <string name="sc_history_long">Riwayat perjalanan &amp; ongkos</string>
 </resources>

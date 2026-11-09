@@ -43,6 +43,12 @@
         android:allowBackup="true"
         android:usesCleartextTraffic="false"
         android:supportsRtl="false">
+
+        <!-- Tekan lama ikon aplikasi: pintasan cepat -->
+        <meta-data
+            android:name="android.app.shortcuts"
+            android:resource="@xml/shortcuts" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -80,5 +86,16 @@
             android:name=".RouteUpdateJob"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+        <!-- Ubin Quick Settings: satu ketuk membuka pencarian rute -->
+        <service
+            android:name=".LumiTileService"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_foreground"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>
