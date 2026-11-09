@@ -53,9 +53,9 @@ jobs:
         run: |
           set -euo pipefail
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
-          PLAT="$ANDROID_HOME/platforms/android-34"
+          PLAT="$ANDROID_HOME/platforms/android-35"
           if [ ! -f "$PLAT/android.jar" ]; then
-            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" >/dev/null
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" >/dev/null
           fi
           mkdir -p tools/sdk
           {
@@ -176,6 +176,11 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+
+      - name: Siapkan platform Android 35
+        run: |
+          set -euo pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" >/dev/null
 
       - name: Setup Gradle (cache)
         uses: gradle/actions/setup-gradle@v4

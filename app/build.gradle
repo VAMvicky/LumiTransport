@@ -16,12 +16,12 @@ def versionCodeOf = { ->
 
 android {
     namespace "id.lumi.transport"
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "id.lumi.transport"
         minSdk 26
-        targetSdk 34
+        targetSdk 35
         versionCode versionCodeOf()
         versionName currentVersion()
     }

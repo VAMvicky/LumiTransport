@@ -25,7 +25,7 @@ KEYSTORE=${KEYSTORE:-lumi-release.keystore}
 KS_PASS=${KS_PASS:-lumi123}
 KS_ALIAS=${KS_ALIAS:-lumi}
 MIN_SDK=26
-TARGET_SDK=34
+TARGET_SDK=35
 OUT=build
 APP=app/src/main
 
