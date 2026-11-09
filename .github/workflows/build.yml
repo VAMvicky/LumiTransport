@@ -210,18 +210,27 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x gradlew
-          # Unduhan distribusi Gradle bisa gagal karena jaringan runner; ulangi sekali.
-          for attempt in 1 2 3; do
-            echo "::group::Percobaan $attempt"
-            if ./gradlew --no-daemon --stacktrace assembleRelease; then
+          # Distribusi Gradle kadang gagal diunduh (mis. 504 dari GitHub). Kalau begitu,
+          # pakai Gradle yang sudah terpasang di runner; kalau tidak ada, ulangi unduhan.
+          GRADLE="./gradlew"
+          if ! ./gradlew --version >/dev/null 2>&1; then
+            if command -v gradle >/dev/null 2>&1; then
+              echo "::warning::Distribusi Gradle tidak bisa diunduh; memakai Gradle bawaan runner."
+              gradle --version
+              GRADLE="gradle"
+            fi
+          fi
+          for attempt in 1 2 3 4; do
+            echo "::group::Percobaan $attempt ($GRADLE)"
+            if $GRADLE --no-daemon --stacktrace assembleRelease; then
               echo "::endgroup::"
               exit 0
             fi
             echo "::endgroup::"
             echo "::warning::Gradle gagal pada percobaan $attempt"
-            sleep 15
+            sleep 30
           done
-          echo "::error::Gradle gagal setelah 3 percobaan"
+          echo "::error::Gradle gagal setelah 4 percobaan"
           exit 1
 
       - name: Ukuran APK Gradle
