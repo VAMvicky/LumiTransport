@@ -168,8 +168,6 @@ jobs:
   gradle:
     name: Gradle (R8 + shrinkResources)
     runs-on: ubuntu-latest
-    # Sementara: job ini masih dalam migrasi, jadi kegagalannya belum memblokir PR.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -181,6 +179,14 @@ jobs:
 
       - name: Setup Gradle (cache)
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Baca versi
+        id: ver
+        run: |
+          set -euo pipefail
+          read -r V CODE < <(bash tools/version.sh)
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
 
       - name: Ambil kunci tanda tangan dari Secrets
         env:
@@ -207,17 +213,37 @@ jobs:
           ./gradlew --no-daemon --stacktrace assembleRelease 2>&1 | tee gradle-build.log
 
       - name: Ukuran APK Gradle
+        id: gsize
         run: |
           set -euo pipefail
           APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
           BYTES=$(stat -c%s "$APK")
+          echo "bytes=$BYTES" >> "$GITHUB_OUTPUT"
           echo "APK Gradle: $APK — $BYTES byte ($(( BYTES / 1024 )) KB)" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Verifikasi identitas APK Gradle
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          BADGING=$("$BT/aapt2" dump badging "$APK")
+          echo "$BADGING" | head -3
+          echo "$BADGING" | grep -q "package: name='id.lumi.transport'" || { echo "::error::applicationId salah"; exit 1; }
+          echo "$BADGING" | grep -q "versionCode='${{ steps.ver.outputs.code }}'" || { echo "::error::versionCode Gradle tidak sesuai CURRENT"; exit 1; }
+          echo "$BADGING" | grep -qi "application-label:'Lumi Transport'" || { echo "::error::nama aplikasi salah"; exit 1; }
+
+      - name: Ganti nama APK Gradle
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          mkdir -p out
+          cp "$APK" "out/LumiTransport-v${{ steps.ver.outputs.version }}.apk"
 
       - name: Upload artifact Gradle
         uses: actions/upload-artifact@v4
         with:
           name: LumiTransport-gradle
-          path: app/build/outputs/apk/release/*.apk
+          path: out/LumiTransport-v*.apk
           if-no-files-found: error
 
   release:
@@ -242,7 +268,7 @@ jobs:
       - name: Unduh APK hasil build
         uses: actions/download-artifact@v4
         with:
-          name: LumiTransport-${{ needs.build.outputs.version }}
+          name: LumiTransport-${{ steps.ver.outputs.version }}
           path: out
 
       - name: Terbitkan rilis
