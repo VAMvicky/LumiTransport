@@ -90,18 +90,6 @@ public class MainActivity extends Activity {
 
         web = new WebView(this);
         web.setBackgroundColor(Color.parseColor("#EEF6FC"));
-
-        // Android 15 (targetSdk 35) memaksa edge-to-edge. Beri padding setinggi system bar
-        // supaya konten WebView tidak tertutup status bar / navigation bar.
-        if (Build.VERSION.SDK_INT >= 35) {
-            web.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
-                @Override public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
-                    android.graphics.Insets b = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
-                    v.setPadding(0, b.top, 0, b.bottom);
-                    return insets;
-                }
-            });
-        }
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -136,7 +124,23 @@ public class MainActivity extends Activity {
         });
         root = new android.widget.FrameLayout(this);
         root.addView(web, new android.widget.FrameLayout.LayoutParams(-1, -1));
+        // Warna di area padding: biru di atas (senada header) dan putih di bawah (senada nav bar).
+        root.setBackground(new android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{ Color.parseColor("#2E95F0"), Color.parseColor("#FFFFFF") }));
         setContentView(root);
+        // Android 15 (targetSdk 35) memaksa edge-to-edge. Padding dipasang di root (content view),
+        // bukan di WebView, supaya seluruh halaman ikut tergeser dari status bar & navigation bar.
+        if (Build.VERSION.SDK_INT >= 35) {
+            root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+                @Override public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                    android.graphics.Insets b = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                    v.setPadding(0, b.top, 0, b.bottom);
+                    return insets;
+                }
+            });
+            root.requestApplyInsets();
+        }
         pendingShare = sharedText(getIntent());
         pendingOpen = openTarget(getIntent());
         web.loadUrl("file:///android_asset/www/index.html");

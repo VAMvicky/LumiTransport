@@ -763,3 +763,15 @@ body.is-accessible .set-card p { font-size: 13.5px; line-height: 1.5; }
     max-width: 820px; width: 100%; margin: 0 auto;
   }
 }
+/* Setelan berbentuk baris: teks kiri, checkbox kanan, sejajar tengah */
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.set-row span { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.set-row input[type="checkbox"] { width: 22px; height: 22px; margin: 0; accent-color: var(--ink); flex: none; }
+
+/* Ikon fitur onboarding: ukuran seragam dan tepat di tengah kotak */
+.ob-ico { display: flex; align-items: center; justify-content: center; }
+.ob-ico svg { width: 26px; height: 26px; display: block; }
+.ob-hero img, .ob-mini img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+
+/* Beranda: rute favorit tanpa data */
+.fav-empty { margin: 0; font-size: 13.5px; color: var(--muted); }
