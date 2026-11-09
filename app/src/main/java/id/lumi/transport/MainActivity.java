@@ -44,6 +44,8 @@ public class MainActivity extends Activity {
     private static final int REQ_LOCATION = 41, REQ_GUIDE = 42, REQ_NOTIF = 43, REQ_PERM = 44;
     /** User-Agent tunggal untuk semua permintaan; diisi dari versionName di onCreate. */
     private static String UA = "LumiTransport/2.0 (Android)";
+    /** Pintasan dari app shortcut / Quick Settings, dikirim ke JS setelah halaman siap. */
+    private String pendingShortcut;
 
     private WebView web;
     private android.widget.FrameLayout root;
@@ -77,6 +79,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        pendingShortcut = getIntent() == null ? null : getIntent().getStringExtra("lumi_shortcut");
         Window w = getWindow();
         w.setStatusBarColor(Color.parseColor("#4DB6F4"));
         w.setNavigationBarColor(Color.parseColor("#FFFFFF"));
@@ -102,7 +105,13 @@ public class MainActivity extends Activity {
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
             @Override
-            public void onPageFinished(WebView view, String url) { pageReady = true; }
+            public void onPageFinished(WebView view, String url) {
+                pageReady = true;
+                if (pendingShortcut != null) {
+                    js("window.__lumiShortcut && __lumiShortcut(" + JSONObject.quote(pendingShortcut) + ")");
+                    pendingShortcut = null;
+                }
+            }
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
@@ -157,6 +166,11 @@ public class MainActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        String sc = intent == null ? null : intent.getStringExtra("lumi_shortcut");
+        if (sc != null) {
+            if (pageReady) js("window.__lumiShortcut && __lumiShortcut(" + JSONObject.quote(sc) + ")");
+            else pendingShortcut = sc;
+        }
         String o = openTarget(intent);
         if (o != null) {
             if (pageReady) js("window.lumiOpen && lumiOpen(" + JSONObject.quote(o) + ")");

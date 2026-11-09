@@ -2077,6 +2077,21 @@
   }
   window.__lumiTripImage = function (i) { return tripImage(S.results[i]); };   // untuk pengujian
   window.__lumiOpenTrip = function (it, f, t) { if (f) S.from = f; if (t) S.to = t; S.dep = S.dep || new Date(); S.results = [colorize(it)]; openTrip(it); };   // untuk pengujian
+
+  /* Pintasan dari app shortcut (tekan lama ikon) dan ubin Quick Settings. */
+  window.__lumiShortcut = function (name) {
+    try {
+      if (name === "history") {
+        setTab("info");
+        openSettings();
+        setTimeout(function () { var c = $("#settingsBody"); if (c) c.scrollTop = c.scrollHeight; }, 220);
+      } else {
+        var ss = $("#sheetSettings"); if (ss) ss.hidden = true;
+        setTab("plan");
+        setTimeout(function () { var f = $("#inFrom"); if (f) { f.focus(); f.select(); } }, 160);
+      }
+    } catch (e) { }
+  };
   $("#btnShare").addEventListener("click", function () { shareTrip(S.openTrip); });
   $$("[data-close]").forEach(function (b) { b.addEventListener("click", function () { b.closest(".sheet").hidden = true; }); });
 
