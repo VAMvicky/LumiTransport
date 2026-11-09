@@ -1263,6 +1263,49 @@
     }
   };
   var i18nOrig = {};
+
+  /* Frasa yang muncul di HTML yang dibangun JS (kartu Pengaturan, Tentang,
+     riwayat, favorit, cadangan). Penggantian berbasis frasa, jadi aman untuk
+     HTML dan tidak menyentuh angka/nama tempat. */
+  var TR = {
+    "Perubahan rute": "Route changes",
+    "<h3>Peta</h3>": "<h3>Map</h3>",
+    "Gaya peta": "Map style",
+    "Mencari alamat": "Finding addresses",
+    "Tempat tersimpan": "Saved places",
+    "Belum ada tempat tersimpan.": "No saved places yet.",
+    "Riwayat perjalanan": "Trip history",
+    "Hapus riwayat": "Clear history",
+    "perjalanan bulan ini": "trips this month",
+    "total": "total",
+    "Rute favorit": "Favourite routes",
+    "Belum ada rute favorit. Cari rute, lalu simpan di sini.": "No favourite routes yet. Plan a route, then save it here.",
+    "Rute tersimpan": "Saved route",
+    "Simpan rute yang sedang aktif": "Save the active route",
+    ">Pakai<": ">Use<",
+    ">Hapus<": ">Delete<",
+    "Cadangkan &amp; pulihkan": "Backup &amp; restore",
+    "Cadangan berisi pengaturan, rute favorit, riwayat perjalanan, dan tempat tersimpan.": "The backup contains settings, favourite routes, trip history and saved places.",
+    "Cadangkan (bagikan)": "Back up (share)",
+    "Pulihkan dari teks": "Restore from text",
+    "Tempel teks cadangan di sini, lalu ketuk Pulihkan": "Paste the backup text here, then tap Restore",
+    "Aksesibilitas": "Accessibility",
+    "Mode aksesibel": "Accessible mode",
+    "Huruf lebih besar, tombol lebih tinggi, dan animasi dikurangi.": "Larger text, taller buttons and reduced animation.",
+    "Bahasa aplikasi": "App language",
+    "Teks layar utama ikut berganti; layar hasil rute menyusul.": "The main screen switches language; route results follow later.",
+    "Tentang Lumi": "About Lumi",
+    "Cek update": "Check for updates",
+    "Laporkan masalah": "Report an issue",
+    "perjalanan bulan ini</b> · total": "trips this month</b> · total"
+  };
+  function tr(s) {
+    if (!s || cfg().lang !== "en") return s;
+    var out = s;
+    for (var k in TR) { if (out.indexOf(k) >= 0) out = out.split(k).join(TR[k]); }
+    return out;
+  }
+
   function i18nKey(kind, sel, attr) { return kind + "|" + sel + "|" + (attr || ""); }
   function applyLang() {
     var lang = cfg().lang === "en" ? "en" : "id";
@@ -2467,7 +2510,7 @@
       '<p><b>Lumi Transport</b> v' + esc(appVersion()) + '. Perencana rute bekerja offline di ponsel; internet hanya dipakai untuk peta, pencarian alamat, dan jarak jalan untuk estimasi ojol.</p>' +
       '<p>Lisensi <a data-url="https://github.com/VAMvicky/LumiTransport/blob/main/LICENSE">GPL-3.0</a> · <a data-url="https://github.com/VAMvicky/LumiTransport">Repo GitHub</a></p>' +
       '<p><button type="button" class="about-btn" id="btnUpdate">Cek update</button><button type="button" class="about-btn" id="btnReport">Laporkan masalah</button></p></div>';
-    $("#infoBody").innerHTML = html;
+    $("#infoBody").innerHTML = tr(html);
     var aboutUp = $("#btnUpdate"), aboutRep = $("#btnReport");
     if (aboutUp) aboutUp.addEventListener("click", checkUpdate);
     if (aboutRep) aboutRep.addEventListener("click", reportIssue);
@@ -2614,7 +2657,7 @@
     html += backupCardHTML();
     html += accessCardHTML();
     html += langCardHTML();
-    $("#settingsBody").innerHTML = html;
+    $("#settingsBody").innerHTML = tr(html);
     var langSel = $("#setLang");
     if (langSel) langSel.addEventListener("change", function () {
       var c = cfg(); c.lang = this.value === "en" ? "en" : "id"; store("cfg", c); applyLang();
