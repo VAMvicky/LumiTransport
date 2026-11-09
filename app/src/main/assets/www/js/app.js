@@ -269,6 +269,15 @@
   }
 
   /* ------------------------------------------------------- aksesibilitas */
+  function langCardHTML() {
+    var lang = cfg().lang === "en" ? "en" : "id";
+    return '<div class="set-card"><h3>Bahasa / Language</h3>' +
+      '<label class="set-field"><span>Bahasa aplikasi</span><select id="setLang">' +
+      '<option value="id"' + (lang === "id" ? " selected" : "") + '>Bahasa Indonesia</option>' +
+      '<option value="en"' + (lang === "en" ? " selected" : "") + '>English</option>' +
+      '</select></label>' +
+      '<p>Teks layar utama ikut berganti; layar hasil rute menyusul.</p></div>';
+  }
   function accessCardHTML() {
     return '<div class="set-card"><h3>Aksesibilitas</h3>' +
       '<label class="set-field"><span>Mode aksesibel</span><input type="checkbox" id="setAccess"' + (cfg().accessible ? " checked" : "") + '></label>' +
@@ -1205,7 +1214,7 @@
 
   /* ------------------------------------------------------- pengaturan */
   // Tidak ada layanan yang butuh API key: peta OpenFreeMap/OSM, alamat lewat Google Maps (Bagikan).
-  var DEFAULT_CFG = { basemap: "liberty", accessible: false };
+  var DEFAULT_CFG = { basemap: "liberty", accessible: false, lang: ((navigator.language || "id").toLowerCase().indexOf("id") === 0 ? "id" : "en") };
   var MAPSTYLES_KEYS = { liberty: 1, bright: 1, positron: 1, osm: 1 };
   function cfg() {
     var c = store("cfg") || {};
@@ -1215,6 +1224,81 @@
   }
   function applyAccessible() {
     try { document.body.classList.toggle("is-accessible", !!cfg().accessible); } catch (e) { }
+  }
+
+  /* ------------------------------------------------------- bahasa (ID/EN) */
+  /* Terjemahan permukaan aplikasi: teks statis di index.html dan judul kartu.
+     Layar hasil rute masih bahasa Indonesia; menyusul di tahap berikutnya. */
+  var I18N = {
+    en: {
+      text: [
+        [".brand-sub", "All Greater Jakarta modes, one route"],
+        [".trip-fields .field:nth-child(1) .field-label", "From"],
+        [".trip-fields .field:nth-child(2) .field-label", "To"],
+        ["#btnGo", "Find route"],
+        ["#btnLocate span", "My location"],
+        ["#tab-lines .page-head h1", "Route info"],
+        ["#tab-lines .page-head p", "Pick a route to see its stops and stations."],
+        ["#tab-info .page-head h1", "Fares & info"],
+        ["#tab-info .page-head p", "Fare estimates Lumi uses to calculate trip cost."],
+        ["#nav .nav-btn[data-tab=plan] span", "Trip"],
+        ["#nav .nav-btn[data-tab=lines] span", "Routes"],
+        ["#nav .nav-btn[data-tab=info] span", "Fares"],
+        ["#sheetSettings .sheet-title", "Settings"],
+        ["#tripTitle", "Trip details"],
+        ["#sheetTime .modal-head h3", "When to leave?"],
+        ["#btnTimeOk", "Use this time"],
+        ["#sheetPick .sheet-title", "Pick a point on the map"],
+        ["#pickOk", "Use this point"],
+        ["#sheetLive .sheet-title", "Buses near you"]
+      ],
+      attr: [
+        ["#inFrom", "placeholder", "From: address, stop, or place"],
+        ["#inTo", "placeholder", "To: address, stop, or place"],
+        ["#inLine", "placeholder", "Search route: 9, 13C, Bogor, MRT, Blok M…"],
+        ["#btnSettings", "aria-label", "Settings"],
+        ["#btnSwap", "aria-label", "Swap origin and destination"],
+        ["#btnLocate", "aria-label", "Use my location"]
+      ]
+    }
+  };
+  var i18nOrig = {};
+  function i18nKey(kind, sel, attr) { return kind + "|" + sel + "|" + (attr || ""); }
+  function applyLang() {
+    var lang = cfg().lang === "en" ? "en" : "id";
+    try { document.documentElement.lang = lang; } catch (e) { }
+    var spec = I18N[lang] || { text: [], attr: [] };
+    var apply = function (list, kind) {
+      list.forEach(function (row) {
+        var sel = row[0], attr = kind === "attr" ? row[1] : null;
+        var value = kind === "attr" ? row[2] : row[1];
+        var key = i18nKey(kind, sel, attr), els;
+        try { els = document.querySelectorAll(sel); } catch (e) { return; }
+        for (var i = 0; i < els.length; i++) {
+          var el = els[i];
+          if (kind === "attr") {
+            if (i18nOrig[key] === undefined) i18nOrig[key] = el.getAttribute(attr) || "";
+            el.setAttribute(attr, value);
+          } else {
+            if (i18nOrig[key] === undefined) i18nOrig[key] = el.textContent;
+            el.textContent = value;
+          }
+        }
+      });
+    };
+    apply(spec.attr, "attr");
+    apply(spec.text, "text");
+    if (lang === "id") {
+      // kembalikan teks asli Indonesia
+      Object.keys(i18nOrig).forEach(function (k) {
+        var parts = k.split("|"), kind = parts[0], sel = parts[1], attr = parts[2];
+        var els; try { els = document.querySelectorAll(sel); } catch (e) { return; }
+        for (var i = 0; i < els.length; i++) {
+          if (kind === "attr") els[i].setAttribute(attr, i18nOrig[k]);
+          else els[i].textContent = i18nOrig[k];
+        }
+      });
+    }
   }
 
   /* ------------------------------------------------------- tempat tersimpan (dari Google Maps) */
@@ -2529,7 +2613,13 @@
     html += favCardHTML();
     html += backupCardHTML();
     html += accessCardHTML();
+    html += langCardHTML();
     $("#settingsBody").innerHTML = html;
+    var langSel = $("#setLang");
+    if (langSel) langSel.addEventListener("change", function () {
+      var c = cfg(); c.lang = this.value === "en" ? "en" : "id"; store("cfg", c); applyLang();
+      renderSettings(["lang", "ok", this.value === "en" ? "Language set to English." : "Bahasa disetel ke Indonesia."]);
+    });
     var btnBackup = $("#btnBackup"), btnRestore = $("#btnRestore");
     if (btnBackup) btnBackup.addEventListener("click", doBackup);
     if (btnRestore) btnRestore.addEventListener("click", doRestore);
@@ -2711,6 +2801,7 @@
   if (obStage !== 2) showOnboarding(obStage === 1 ? 2 : 1);
 
   applyAccessible();
+  applyLang();
   syncTimeChip();
   renderIntro();
   renderGtfsBanner();
