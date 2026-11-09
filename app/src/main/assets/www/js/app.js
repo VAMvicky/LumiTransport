@@ -2005,6 +2005,14 @@
     html += '<div class="btn-row"><button class="btn-sec" id="btnShare2">Bagikan rute (gambar)</button></div>';
     html += '<p class="disclaim">Jadwal tidak real-time. Cek pengumuman operator untuk gangguan atau perubahan rute.</p>';
     var body = $("#tripBody"); body.innerHTML = html; body.scrollTop = 0;
+    if (!body.querySelector("#btnReportStop")) {
+      var rb = document.createElement("button");
+      rb.type = "button"; rb.id = "btnReportStop"; rb.className = "btn-sec";
+      rb.textContent = "Laporkan halte/rute salah";
+      rb.style.marginTop = "14px";
+      rb.addEventListener("click", reportStopIssue);
+      body.appendChild(rb);
+    }
     $$("[data-tog]", body).forEach(function (b) {
       b.addEventListener("click", function () { var ul = b.closest(".st-card").querySelector(".st-stops"); ul.hidden = !ul.hidden; b.textContent = ul.hidden ? "Lihat " + b.dataset.tog + " pemberhentian" : "Sembunyikan pemberhentian"; });
     });
@@ -2542,6 +2550,21 @@
       toast("Versi baru tersedia: " + tag);
       setTimeout(function () { openExt("https://github.com/VAMvicky/LumiTransport/releases/latest"); }, 900);
     }).catch(function () { toast("Tidak bisa memeriksa update (offline?)"); }).then(done);
+  }
+
+  function reportStopIssue() {
+    var it = S.openTrip, v = appVersion();
+    var lines = [], seen = {};
+    if (it && it.legs) it.legs.forEach(function (l) {
+      if (l.type === "ride" && l.line && !seen[l.line.code]) { seen[l.line.code] = 1; lines.push(l.line.code); }
+    });
+    var body = "### Halte / rute yang salah\n\n" +
+      "- Dari: " + (S.from ? S.from.name + " (" + ((S.from.p || []).join(", ")) + ")" : "-") + "\n" +
+      "- Ke: " + (S.to ? S.to.name + " (" + ((S.to.p || []).join(", ")) + ")" : "-") + "\n" +
+      (lines.length ? "- Rute: " + lines.join(" · ") + "\n" : "") +
+      "\n### Apa yang salah\n\n(halte tidak ada / urutan salah / tarif salah / lainnya)\n\n" +
+      "### Lingkungan\n- Lumi Transport v" + v + "\n- " + (navigator.userAgent || "") + "\n";
+    openExt("https://github.com/VAMvicky/LumiTransport/issues/new?title=" + encodeURIComponent("[halte/rute] ") + "&body=" + encodeURIComponent(body));
   }
 
   function reportIssue() {
