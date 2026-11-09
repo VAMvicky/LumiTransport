@@ -2088,7 +2088,10 @@
       } else {
         var ss = $("#sheetSettings"); if (ss) ss.hidden = true;
         setTab("plan");
-        setTimeout(function () { var f = $("#inFrom"); if (f) { f.focus(); f.select(); } }, 160);
+        setTimeout(function () {
+          var f = name === "home" ? $("#inTo") : $("#inFrom");
+          if (f) { f.focus(); f.select(); }
+        }, 160);
       }
     } catch (e) { }
   };
