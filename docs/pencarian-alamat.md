@@ -69,7 +69,24 @@ Saran alamat yang "persis seperti Google Maps" hanya bisa didapat lewat produk r
 4. Pembatasan key: **Application restrictions → Android** (package `id.lumi.transport` + SHA-1 sertifikat), **API restrictions → Places API (New)**.
 5. Fallback: kalau jaringan gagal atau kuota habis, pakai pencarian halte lokal yang sudah ada.
 
+## Keputusan (9 November 2026)
+
+Google Maps **tidak** dipakai sebagai sumber saran alamat: endpoint-nya internal, ber-auth, dan tidak boleh dipakai ulang. Yang dipakai:
+
+1. **Pencarian alamat: OpenStreetMap lewat Photon** (`photon.komoot.io`). Gratis, tanpa API key, mendukung autocomplete, dan bisa dibatasi ke Indonesia (`countrycode=ID`) dengan bias lokasi Jakarta.
+2. **Fitur bagikan tetap dipertahankan.** Alur lama - pilih tempat di Google Maps, lalu **Bagikan -> Lumi Transport** - tetap jadi cara paling akurat untuk alamat yang tidak ada di OSM. Aplikasi membaca koordinat dari teks/tautan yang dibagikan pengguna, bukan menyalin data Maps.
+
+Urutan saran saat mengetik:
+
+1. "Cari ... di Google Maps" (membuka Maps, lalu bagikan balik ke Lumi)
+2. **Saran alamat OpenStreetMap** (muncul setelah 3 huruf)
+3. Tempat tersimpan dari bagikan sebelumnya
+4. "Lokasi saya sekarang" (saat kolom kosong)
+
+Implementasi: `osmLookup()` di `app.js` memakai jembatan `LumiNative.http` (UA tunggal dari `versionName`), menyaring `countrycode == ID`, dan menyisipkan hasil di bawah baris Google Maps. Rilis 2.1.
+
 ## Yang belum terjawab
 
-- Harga per SKU dan besaran kuota gratis berubah-ubah; cek halaman resmi Google Maps Platform sebelum mengaktifkan billing.
-- Kualitas hasil untuk alamat kampung/ gang di Jabodetabek perlu diuji dengan ~20 alamat nyata sebelum diputuskan.
+- Photon publik punya batas pemakaian wajar; kalau Lumi ramai, siapkan instance Photon sendiri atau cache hasil per kueri.
+- Kualitas hasil untuk alamat kampung/gang di Jabodetabek perlu diuji dengan ~20 alamat nyata.
+
