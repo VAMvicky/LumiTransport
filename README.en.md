@@ -123,6 +123,7 @@
 
 **🎨 Look & feel**
 - **Light-blue** theme with a blue-gradient logo; welcome and permission screens that **fit on one screen**
+- **Two languages**: Indonesian or English (Settings → Language). The whole app switches, including route results, shared images, notifications and voice guidance
 - Full route info: search routes (`9`, `13C`, `JAK.10`, `Bogor`, `MRT`), stop order, directions, variants, operating hours, and connections at each stop
 - **OpenFreeMap** vector maps (MapLibre GL) — free, no API key; Liberty, Bright, Positron or standard OpenStreetMap styles
 
@@ -177,8 +178,8 @@ Sources are listed in the [Indonesian README](README.md#-tarif-yang-dipakai).
 
 ### 0️⃣ First launch
 Two short screens, each **fitting on one screen without scrolling**:
-1. **Welcome**: a feature overview, tap **Mulai** (Start).
-2. **One more step**: allow **location**, **notifications** and **background running**. Xiaomi, Oppo, Vivo, Realme and Infinix phones get an optional **Auto-start settings** button.
+1. **Welcome**: a feature overview, tap **Get started**.
+2. **One more step**: allow **location**, **notifications** and **background running**. **Start planning** only unlocks once all three are allowed; a permission that was permanently denied opens the app-info page instead. Xiaomi, Oppo, Vivo, Realme and Infinix phones get an optional **Autostart settings** button.
 
 Lumi then downloads the official Transjakarta route data in the background (needs internet once).
 

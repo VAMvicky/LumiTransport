@@ -54,11 +54,12 @@ public class NavService extends Service {
     static void channels(Context ctx) {
         if (Build.VERSION.SDK_INT < 26) return;
         NotificationManager nm = (NotificationManager) ctx.getSystemService(NOTIFICATION_SERVICE);
-        NotificationChannel a = new NotificationChannel(CH_GUIDE, "Pendampingan perjalanan", NotificationManager.IMPORTANCE_LOW);
-        a.setDescription("Posisi dan sisa pemberhentian selama perjalanan");
+        Lang.ensure(ctx);
+        NotificationChannel a = new NotificationChannel(CH_GUIDE, Lang.t("Pendampingan perjalanan", "Trip guidance"), NotificationManager.IMPORTANCE_LOW);
+        a.setDescription(Lang.t("Posisi dan sisa pemberhentian selama perjalanan", "Your position and remaining stops during the trip"));
         nm.createNotificationChannel(a);
-        NotificationChannel b = new NotificationChannel(CH_ALERT, "Peringatan turun", NotificationManager.IMPORTANCE_HIGH);
-        b.setDescription("Siap-siap turun / turun sekarang");
+        NotificationChannel b = new NotificationChannel(CH_ALERT, Lang.t("Peringatan turun", "Get-off alerts"), NotificationManager.IMPORTANCE_HIGH);
+        b.setDescription(Lang.t("Siap-siap turun / turun sekarang", "Get ready / get off now"));
         b.enableVibration(true);
         b.setVibrationPattern(new long[]{0, 400, 200, 400, 200, 600});
         nm.createNotificationChannel(b);
@@ -93,7 +94,7 @@ public class NavService extends Service {
     @SuppressWarnings("deprecation")
     private void alert(String text) {
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CH_ALERT) : new Notification.Builder(this);
-        b.setSmallIcon(android.R.drawable.ic_dialog_alert).setContentTitle("Lumi · Pendampingan").setContentText(text)
+        b.setSmallIcon(android.R.drawable.ic_dialog_alert).setContentTitle(Lang.t("Lumi · Pendampingan", "Lumi · Guidance")).setContentText(text)
                 .setStyle(new Notification.BigTextStyle().bigText(text))
                 .setAutoCancel(true).setColor(0xFF1565D8).setContentIntent(openApp())
                 .setPriority(Notification.PRIORITY_HIGH).setDefaults(Notification.DEFAULT_ALL);
@@ -116,8 +117,9 @@ public class NavService extends Service {
             return START_NOT_STICKY;
         }
         channels(this);
-        String title = intent != null && intent.getStringExtra("title") != null ? intent.getStringExtra("title") : "Pendampingan perjalanan";
-        Notification n = build(title, "Mencari posisi GPS…");
+        Lang.load(this);
+        String title = intent != null && intent.getStringExtra("title") != null ? intent.getStringExtra("title") : Lang.t("Pendampingan perjalanan", "Trip guidance");
+        Notification n = build(title, Lang.t("Mencari posisi GPS…", "Finding GPS position…"));
         if (Build.VERSION.SDK_INT >= 29) startForeground(NOTIF_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
         else startForeground(NOTIF_ID, n);
         running = true;
@@ -147,7 +149,7 @@ public class NavService extends Service {
             }
             if (best != null && System.currentTimeMillis() - best.getTime() < 120000) onLoc(best);
         } catch (SecurityException e) {
-            ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(NOTIF_ID, build("Izin lokasi diperlukan", "Buka Lumi dan izinkan akses lokasi."));
+            ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(NOTIF_ID, build(Lang.t("Izin lokasi diperlukan", "Location permission needed"), Lang.t("Buka Lumi dan izinkan akses lokasi.", "Open Lumi and allow location access.")));
         }
     }
 

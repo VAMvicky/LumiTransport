@@ -24,7 +24,7 @@ final class LumiTts {
                 @Override public void onInit(int status) {
                     if (status != TextToSpeech.SUCCESS) return;
                     synchronized (LumiTts.class) {
-                        try { tts.setLanguage(new Locale("id", "ID")); } catch (Exception ignored) { }
+                        applyLang();
                         ready = true;
                         if (pending != null) {
                             String p = pending; pending = null;
@@ -36,7 +36,13 @@ final class LumiTts {
             return;
         }
         if (!ready) { pending = text; return; }
+        applyLang();
         try { tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "lumi"); } catch (Exception ignored) { }
+    }
+
+    /** Suara mengikuti bahasa aplikasi (Indonesia / Inggris). */
+    private static void applyLang() {
+        try { tts.setLanguage(Lang.en ? Locale.US : new Locale("id", "ID")); } catch (Exception ignored) { }
     }
 
     static synchronized void stop() {

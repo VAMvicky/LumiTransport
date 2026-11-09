@@ -47,7 +47,8 @@ public class MainActivity extends Activity {
     private static String UA = "LumiTransport/2.0 (Android)";
     /** Pintasan dari app shortcut / Quick Settings, dikirim ke JS setelah halaman siap. */
     private String pendingShortcut;
-    private int insetsTop, insetsBottom;
+    private volatile int insetsTop, insetsBottom;
+    private volatile boolean imeOpen;
 
     private WebView web;
     private android.widget.FrameLayout root;
@@ -81,6 +82,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Lang.load(this);
         pendingShortcut = getIntent() == null ? null : getIntent().getStringExtra("lumi_shortcut");
         Window w = getWindow();
         w.setStatusBarColor(Color.parseColor("#4DB6F4"));
@@ -109,6 +111,7 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 pageReady = true;
+                sendInsets();
                 if (pendingShortcut != null) {
                     js("window.__lumiShortcut && __lumiShortcut(" + JSONObject.quote(pendingShortcut) + ")");
                     pendingShortcut = null;
@@ -129,13 +132,27 @@ public class MainActivity extends Activity {
         // Android 15 (targetSdk 35) memaksa edge-to-edge. Inset dikirim ke halaman sebagai
         // variabel CSS (--safe-top/--safe-bottom), bukan padding native, supaya latar header
         // tetap menyambung sampai ke atas layar.
+        //
+        // v2.12:
+        //  - Nilai inset dari Android dalam piksel fisik; CSS memakai dp. Dulu nilai mentah dikirim,
+        //    sehingga header/nav jadi sangat tinggi begitu inset dikirim ulang (mis. saat keyboard muncul).
+        //  - Kiriman pertama terjadi sebelum halaman selesai dimuat, jadi tidak sampai dan header
+        //    menabrak status bar. Sekarang dikirim lagi di onPageFinished dan bisa diminta lewat bridge.
+        //  - Edge-to-edge membuat adjustResize tidak berlaku: tinggi keyboard dipasang sebagai padding
+        //    bawah root agar WebView mengecil, dan nav bawah halaman tidak terdorong/tertutup.
         if (Build.VERSION.SDK_INT >= 35) {
             root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
                 @Override public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
                     android.graphics.Insets b = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
-                    insetsTop = b.top; insetsBottom = b.bottom;
+                    android.graphics.Insets ime = insets.getInsets(WindowInsets.Type.ime());
+                    boolean kb = insets.isVisible(WindowInsets.Type.ime()) && ime.bottom > b.bottom;
+                    float d = getResources().getDisplayMetrics().density;
+                    insetsTop = Math.round(b.top / d);
+                    insetsBottom = kb ? 0 : Math.round(b.bottom / d);   // keyboard menutupi navigation bar
+                    imeOpen = kb;
+                    v.setPadding(b.left, 0, b.right, kb ? ime.bottom : 0);
                     sendInsets();
-                    return insets;
+                    return WindowInsets.CONSUMED;
                 }
             });
             root.requestApplyInsets();
@@ -346,7 +363,7 @@ public class MainActivity extends Activity {
 
     /** Kirim tinggi system bar ke halaman (dipakai CSS sebagai --safe-top/--safe-bottom). */
     private void sendInsets() {
-        js("window.__lumiInsets && window.__lumiInsets(" + insetsTop + "," + insetsBottom + ")");
+        js("window.__lumiInsets && window.__lumiInsets(" + insetsTop + "," + insetsBottom + "," + imeOpen + ")");
     }
 
     private void js(final String code) {
@@ -361,7 +378,7 @@ public class MainActivity extends Activity {
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
         } catch (Exception e) {
-            js("window.lumiToast && lumiToast('Tidak ada aplikasi untuk membuka tautan ini')");
+            js("window.lumiToast && lumiToast(" + JSONObject.quote(Lang.t("Tidak ada aplikasi untuk membuka tautan ini", "No app can open this link")) + ")");
         }
     }
 
@@ -374,7 +391,7 @@ public class MainActivity extends Activity {
                 o.put("lon", loc.getLongitude());
                 o.put("acc", loc.getAccuracy());
             } else {
-                o.put("error", err == null ? "Lokasi tidak tersedia" : err);
+                o.put("error", err == null ? Lang.t("Lokasi tidak tersedia", "Location unavailable") : err);
             }
             js("window.__lumiLocate(" + JSONObject.quote(id) + "," + o.toString() + ")");
         } catch (Exception ignored) { }
@@ -383,7 +400,7 @@ public class MainActivity extends Activity {
     @SuppressWarnings("MissingPermission")
     private void locateNow(final String id) {
         final LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
-        if (lm == null) { deliverLocation(id, null, "Layanan lokasi tidak tersedia"); return; }
+        if (lm == null) { deliverLocation(id, null, Lang.t("Layanan lokasi tidak tersedia", "Location service unavailable")); return; }
         Location best = null;
         for (String p : lm.getProviders(true)) {
             Location l = lm.getLastKnownLocation(p);
@@ -397,7 +414,7 @@ public class MainActivity extends Activity {
         String provider = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) ? LocationManager.NETWORK_PROVIDER
                 : lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ? LocationManager.GPS_PROVIDER : null;
         if (provider == null) {
-            deliverLocation(id, fallback, "Aktifkan GPS / Lokasi di pengaturan ponsel");
+            deliverLocation(id, fallback, Lang.t("Aktifkan GPS / Lokasi di pengaturan ponsel", "Turn on GPS / Location in your phone settings"));
             return;
         }
         final boolean[] done = {false};
@@ -417,7 +434,7 @@ public class MainActivity extends Activity {
             if (done[0]) return;
             done[0] = true;
             lm.removeUpdates(listener);
-            deliverLocation(id, fallback, "Sinyal lokasi lemah, coba lagi di area terbuka");
+            deliverLocation(id, fallback, Lang.t("Sinyal lokasi lemah, coba lagi di area terbuka", "Weak location signal, try again in an open area"));
         }}, 15000);
     }
 
@@ -429,7 +446,7 @@ public class MainActivity extends Activity {
             for (int i = 0; i < perms.length; i++)
                 if (perms[i].contains("LOCATION") && results[i] == PackageManager.PERMISSION_GRANTED) ok = true;
             if (ok && pendingGuide != null) { NavService.start(this, pendingGuide[0], pendingGuide[1]); }
-            else js("window.__lumiGuide && __lumiGuide({error:'Izin lokasi ditolak. Pendampingan butuh akses lokasi.'})");
+            else js("window.__lumiGuide && __lumiGuide({error:" + JSONObject.quote(Lang.t("Izin lokasi ditolak. Pendampingan butuh akses lokasi.", "Location permission denied. Guidance needs location access.")) + "})");
             pendingGuide = null;
             return;
         }
@@ -439,7 +456,7 @@ public class MainActivity extends Activity {
             boolean ok = false;
             for (int r : results) ok |= r == PackageManager.PERMISSION_GRANTED;
             if (ok) locateNow(id);
-            else deliverLocation(id, null, "Izin lokasi ditolak");
+            else deliverLocation(id, null, Lang.t("Izin lokasi ditolak", "Location permission denied"));
         }
     }
 
@@ -761,7 +778,7 @@ public class MainActivity extends Activity {
                 Intent i = new Intent(Intent.ACTION_SEND);
                 i.setType("text/plain");
                 i.putExtra(Intent.EXTRA_TEXT, text);
-                startActivity(Intent.createChooser(i, "Bagikan rute"));
+                startActivity(Intent.createChooser(i, Lang.t("Bagikan rute", "Share route")));
             }});
         }
 
@@ -846,6 +863,14 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public String takeOpen() { String o = pendingOpen; pendingOpen = null; return o; }
 
+        /** Inset system bar (dp) untuk halaman: {"top":..,"bottom":..,"ime":..}. */
+        @JavascriptInterface
+        public String insets() { return "{\"top\":" + insetsTop + ",\"bottom\":" + insetsBottom + ",\"ime\":" + imeOpen + "}"; }
+
+        /** Bahasa aplikasi dari halaman ("id" / "en"): dipakai notifikasi, pendampingan, dan suara. */
+        @JavascriptInterface
+        public void setLang(String lang) { Lang.set(MainActivity.this, lang); }
+
         /** Status izin untuk layar "Satu langkah lagi". */
         @JavascriptInterface
         public String permState() {
@@ -858,6 +883,19 @@ public class MainActivity extends Activity {
         public void requestPerm(final String kind) {
             main.post(new Runnable() { @Override public void run() {
                 try {
+                    // Izin yang sudah ditolak permanen tidak memunculkan dialog lagi: arahkan ke info aplikasi,
+                    // supaya pengguna tetap bisa mencentang semua izin di layar sambutan.
+                    String perm = "loc".equals(kind) ? Manifest.permission.ACCESS_FINE_LOCATION
+                            : ("notif".equals(kind) && Build.VERSION.SDK_INT >= 33) ? "android.permission.POST_NOTIFICATIONS" : null;
+                    if (perm != null && Build.VERSION.SDK_INT >= 23) {
+                        android.content.SharedPreferences sp = getSharedPreferences("lumi", MODE_PRIVATE);
+                        boolean asked = sp.getBoolean("askedPerm_" + kind, false);
+                        sp.edit().putBoolean("askedPerm_" + kind, true).apply();
+                        if (asked && checkSelfPermission(perm) != PackageManager.PERMISSION_GRANTED && !shouldShowRequestPermissionRationale(perm)) {
+                            startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName())));
+                            return;
+                        }
+                    }
                     if ("loc".equals(kind) && Build.VERSION.SDK_INT >= 23) {
                         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_PERM);
                     } else if ("notif".equals(kind)) {
@@ -924,10 +962,10 @@ public class MainActivity extends Activity {
                         if (text != null && !text.isEmpty()) i.putExtra(Intent.EXTRA_TEXT, text);
                         i.setClipData(android.content.ClipData.newRawUri("rute", uri));
                         i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        startActivity(Intent.createChooser(i, "Bagikan rute"));
+                        startActivity(Intent.createChooser(i, Lang.t("Bagikan rute", "Share route")));
                     }});
                 } catch (Exception e) {
-                    js("window.lumiToast && lumiToast('Gagal membuat gambar rute')");
+                    js("window.lumiToast && lumiToast(" + JSONObject.quote(Lang.t("Gagal membuat gambar rute", "Could not create the route image")) + ")");
                 }
             }});
         }
@@ -982,8 +1020,8 @@ public class MainActivity extends Activity {
                     if (nm == null) return;
                     String ch = "lumi_bus";
                     if (Build.VERSION.SDK_INT >= 26) {
-                        android.app.NotificationChannel c = new android.app.NotificationChannel(ch, "Info bus", android.app.NotificationManager.IMPORTANCE_HIGH);
-                        c.setDescription("Bus yang kamu tunggu semakin dekat");
+                        android.app.NotificationChannel c = new android.app.NotificationChannel(ch, Lang.t("Info bus", "Bus info"), android.app.NotificationManager.IMPORTANCE_HIGH);
+                        c.setDescription(Lang.t("Bus yang kamu tunggu semakin dekat", "The bus you are waiting for is getting close"));
                         nm.createNotificationChannel(c);
                     }
                     String body = text == null ? "" : text;
@@ -991,7 +1029,7 @@ public class MainActivity extends Activity {
                             ? new android.app.Notification.Builder(MainActivity.this, ch)
                             : new android.app.Notification.Builder(MainActivity.this);
                     b.setSmallIcon(android.R.drawable.ic_dialog_info)
-                     .setContentTitle(title == null ? "Info bus" : title)
+                     .setContentTitle(title == null ? Lang.t("Info bus", "Bus info") : title)
                      .setContentText(body)
                      .setStyle(new android.app.Notification.BigTextStyle().bigText(body))
                      .setAutoCancel(true);

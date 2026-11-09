@@ -10,6 +10,51 @@
 
 ---
 
+## ✦ v2.12 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### 🔧 Perbaikan
+
+- Header tidak lagi menabrak status bar (inset dikirim saat halaman siap, juga untuk detail rute dan layar sambutan)
+- Header dan menu bawah tidak lagi membesar saat mengetik (inset dalam dp; keyboard mengecilkan layar, menu bawah disembunyikan)
+- Ikon fitur layar sambutan tepat di tengah kotak
+- Jarak keterangan di kartu Bahasa diperlebar
+- **Mulai cari rute** terkunci sampai lokasi, notifikasi, dan latar belakang diizinkan; izin yang ditolak permanen membuka info aplikasi
+
+### ✨ Baru
+
+- Terjemahan bahasa Inggris menyeluruh, termasuk gambar/teks yang dibagikan, notifikasi, panduan suara, dan pesan galat
+
+### 🔧 Teknis
+
+- `versionCode` **21200**
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### 🔧 Fixes
+
+- Header no longer collides with the status bar (insets sent once the page is ready, also used by route details and the welcome screen)
+- Header and bottom menu no longer grow while typing (insets in dp; the keyboard resizes the screen and the bottom menu hides)
+- Welcome-screen feature icons are centred in their boxes
+- More spacing under the Language selector
+- **Start planning** stays locked until location, notifications and background access are allowed; permanently denied permissions open app info
+
+### ✨ New
+
+- Complete English translation, including shared images/text, notifications, voice guidance and error messages
+
+### 🔧 Technical
+
+- `versionCode` **21200**
+
+</details>
+
+---
 ## ✦ v2.11 — 9 November 2026 / 9 November 2026
 
 <details open>

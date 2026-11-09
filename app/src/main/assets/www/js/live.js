@@ -86,9 +86,9 @@
       buf = buf.slice(i + len);
       if (type === 2) {                        // CONNACK
         if (body[1] === 0) { connected = true; phase = "connack"; retryMs = 2000; active = {}; lastError = ""; setState("connected"); syncSubs(); }
-        else { lastError = "ditolak server (kode CONNACK " + body[1] + ")"; setState("error"); }
+        else { lastError = lt("ditolak server (kode CONNACK ", "rejected by server (CONNACK code ") + body[1] + ")"; setState("error"); }
       } else if (type === 9) {                 // SUBACK
-        for (var k = 2; k < body.length; k++) if (body[k] === 0x80) lastError = "langganan topik ditolak server";
+        for (var k = 2; k < body.length; k++) if (body[k] === 0x80) lastError = lt("langganan topik ditolak server", "topic subscription rejected by server");
       } else if (type === 3) {                 // PUBLISH
         var tl = (body[0] << 8) | body[1], topic = dec.decode(body.subarray(2, 2 + tl)), p = 2 + tl;
         var qos = (flags >> 1) & 3;
@@ -111,10 +111,12 @@
     pingT = setInterval(function () { send(new Uint8Array([0xC0, 0])); }, 45000);
   }
   var PHASE_TXT = { "": "sebelum tersambung", ws: "sebelum login MQTT", connack: "setelah login", sub: "setelah berlangganan rute", data: "saat menerima data" };
+  var PHASE_EN = { "": "before connecting", ws: "before MQTT login", connack: "after login", sub: "after subscribing to routes", data: "while receiving data" };
+  function lt(id, en) { var I = root.LumiI18n; return I && I.en ? en : id; }
   function onClosed(reason) {
     var ph = phase;
     ws = null; connected = false; buf = new Uint8Array(0); clearInterval(pingT); active = {};
-    lastError = (reason || "koneksi terputus") + " · " + (PHASE_TXT[ph] || ph);
+    lastError = (reason || lt("koneksi terputus", "connection lost")) + " · " + ((root.LumiI18n && root.LumiI18n.en ? PHASE_EN[ph] : PHASE_TXT[ph]) || ph);
     // Server memutus setelah langganan per rute (belum ada data) → pakai topik umum seperti klien publik lain.
     if (ph === "sub" && !gotData && !allMode) {
       allMode = true;
@@ -133,7 +135,7 @@
     ws.onopen = onOpen;
     ws.onmessage = function (ev) { bytesWeb += ev.data.byteLength || 0; onBytes(new Uint8Array(ev.data)); };
     ws.onerror = function () { };
-    ws.onclose = function (ev) { onClosed("WebSocket ditutup (kode " + ev.code + ")"); };
+    ws.onclose = function (ev) { onClosed(lt("WebSocket ditutup (kode ", "WebSocket closed (code ") + ev.code + ")"); };
   }
   function scheduleRetry() { clearTimeout(retryT); retryT = setTimeout(connect, retryMs); retryMs = Math.min(30000, retryMs * 1.7); }
   function disconnect() {
@@ -228,7 +230,7 @@
         hookHttp();
         var id = "lv" + (++liveSeq);
         liveCb[id] = function (status, b) {
-          if (!status) reject(new Error(String(b || "jaringan gagal")));
+          if (!status) reject(new Error(String(b || lt("jaringan gagal", "network error"))));
           else if (status >= 400) reject(new Error("HTTP " + status));
           else resolve(b);
         };
@@ -269,7 +271,7 @@
     tokPromise = request("POST", "/v1/auth/login/guest", JSON.stringify({ device_id: devId() }))
       .then(function (body) {
         var j = JSON.parse(body);
-        if (!j || !j.token) throw new Error("token tamu kosong");
+        if (!j || !j.token) throw new Error(lt("token tamu kosong", "empty guest token"));
         tok = j.token;
         tokExp = jwtExp(tok) || now + 3600;
         try { localStorage.setItem(TOK_KEY, tok); localStorage.setItem(EXP_KEY, String(tokExp)); } catch (e) { }
@@ -363,10 +365,12 @@
       if (lvl <= prev) return null;
       st[busKey] = lvl;
     }
-    var when = lvl >= 4 ? "sudah tiba" : lvl === 3 ? "±2 menit lagi" : lvl === 2 ? "±5 menit lagi" : "±10 menit lagi";
+    var I = root.LumiI18n, en = !!(I && I.en);
+    var when = en ? (lvl >= 4 ? "has arrived" : lvl === 3 ? "is ±2 min away" : lvl === 2 ? "is ±5 min away" : "is ±10 min away")
+      : (lvl >= 4 ? "sudah tiba" : lvl === 3 ? "±2 menit lagi" : lvl === 2 ? "±5 menit lagi" : "±10 menit lagi");
     return { level: lvl,
-      title: "Bus " + code + (lvl >= 4 ? " tiba" : " mendekat"),
-      text: "Bus " + code + " " + when + " di " + stop + " (" + busKey + ")" };
+      title: "Bus " + code + (lvl >= 4 ? (en ? " arriving" : " tiba") : (en ? " approaching" : " mendekat")),
+      text: "Bus " + code + " " + when + (en ? " at " : " di ") + stop + " (" + busKey + ")" };
   }
 
   function notify(title, text) {

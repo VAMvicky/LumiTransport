@@ -39,6 +39,7 @@ public class RouteWatchJob extends JobService {
 
     @Override
     public boolean onStartJob(final JobParameters params) {
+        Lang.load(this);
         worker = new Thread(new Runnable() {
             @Override public void run() {
                 try { check(RouteWatchJob.this); } catch (Throwable ignored) { }

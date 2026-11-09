@@ -123,6 +123,7 @@
 
 **🎨 Tampilan**
 - Tema **biru muda** dengan logo gradasi biru, layar sambutan dan izin yang **muat satu layar**
+- **Dua bahasa**: Indonesia atau Inggris (Pengaturan → Bahasa). Seluruh aplikasi ikut berganti, termasuk hasil rute, gambar yang dibagikan, notifikasi, dan panduan suara
 - Info rute lengkap: cari rute (`9`, `13C`, `JAK.10`, `Bogor`, `MRT`), lihat urutan halte, arah, varian, jam operasional, dan rute sambungan di tiap halte
 - Nama trayek resmi (mis. **9N Pinang Ranti – Simpang Cawang**). Rute memutar dipecah menjadi dua arah, dan setiap varian diberi keterangan singkat: *via Tol*, *lewat Senen*, *tanpa ASEAN*, *mulai Bundaran Senayan*, *putar balik di Harmoni*
 - Peta **OpenFreeMap** (vektor, MapLibre GL) — gratis tanpa API key; pilihan gaya Liberty, Bright, Positron, atau OpenStreetMap standar
@@ -195,7 +196,7 @@ Diperbarui **29 Oktober 2026**. Tarif adalah perkiraan; selalu cek pengumuman op
 ### 0️⃣ Pertama kali dibuka
 Lumi menampilkan dua layar singkat, masing-masing **pas dalam satu layar tanpa scroll**:
 1. **Sambutan**: ringkasan fitur, ketuk **Mulai**.
-2. **Satu langkah lagi**: izinkan **lokasi**, **notifikasi**, dan **berjalan di latar belakang**. Untuk HP Xiaomi, Oppo, Vivo, Realme, dan Infinix ada tombol opsional **Buka pengaturan Mulai otomatis**.
+2. **Satu langkah lagi**: izinkan **lokasi**, **notifikasi**, dan **berjalan di latar belakang**. Tombol **Mulai cari rute** baru aktif setelah ketiganya diizinkan; izin yang pernah ditolak permanen membuka halaman info aplikasi. Untuk HP Xiaomi, Oppo, Vivo, Realme, dan Infinix ada tombol opsional **Buka pengaturan Mulai otomatis**.
 
 Setelah itu Lumi mengunduh data rute resmi Transjakarta di latar belakang (butuh internet sekali).
 
@@ -294,11 +295,13 @@ app/src/main/
 │   ├── RouteDiff.java        # Bandingkan rute lama vs baru
 │   ├── RouteWatchJob.java    # Cek perubahan tiap jam
 │   ├── RouteUpdateJob.java   # Pembaruan harian
+│   ├── Lang.java             # Bahasa teks native (notifikasi, pendampingan, suara)
 │   └── ShareProvider.java    # Berbagi gambar rute tanpa izin penyimpanan
 └── assets/www/
     ├── index.html, css/app.css
     ├── js/engine.js          # Mesin rute, tarif, jam operasional
     ├── js/app.js             # Antarmuka
+    ├── js/i18n.js            # Terjemahan Indonesia → Inggris
     └── js/data.js            # Data rute bawaan (dibuat tools/build_data.py)
 data/                         # Umpan perubahan rute (diisi GitHub Actions)
 data-raw/                     # Data mentah: GTFS, koordinat stasiun, daftar rute resmi
