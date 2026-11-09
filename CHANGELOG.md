@@ -10,6 +10,53 @@
 
 ---
 
+## ✦ v2.10 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### 🔧 Perbaikan
+
+- Layar tidak lagi terpotong status bar / navigation bar (padding dipindah ke root tampilan)
+- Logo onboarding memakai ikon baru; ikon fitur berukuran seragam dan di tengah
+- Teks dan kotak centang Mode aksesibel / Panduan suara sejajar
+
+### ✨ Baru
+
+- **Rute favorit di beranda** menggantikan Tujuan populer (satu ketuk langsung hitung rute)
+- **Tab Halte**: cari halte/stasiun, ketuk untuk membuka peta
+- **Tab Riwayat**: riwayat perjalanan + ongkos bulanan
+- Navigasi bawah: Perjalanan · Rute · Halte · Tarif · Riwayat
+
+### 🔧 Teknis
+
+- `versionCode` **21000**
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### 🔧 Fixes
+
+- Screen no longer clipped by the status/navigation bars (padding moved to the content root)
+- Onboarding uses the new app icon; feature icons share one size and are centred
+- Accessible mode / voice guidance labels and checkboxes are aligned
+
+### ✨ New
+
+- **Favourite routes on the home screen** replace popular destinations (one tap computes the route)
+- **Stops tab**: search a stop or station, tap to open it on the map
+- **History tab**: trip history with monthly fares
+- Bottom navigation: Trip · Routes · Stops · Fares · History
+
+### 🔧 Technical
+
+- `versionCode` **21000**
+
+</details>
+
+---
 ## ✦ v2.9 — 9 November 2026 / 9 November 2026
 
 <details open>
