@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowInsets;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -89,6 +90,18 @@ public class MainActivity extends Activity {
 
         web = new WebView(this);
         web.setBackgroundColor(Color.parseColor("#EEF6FC"));
+
+        // Android 15 (targetSdk 35) memaksa edge-to-edge. Beri padding setinggi system bar
+        // supaya konten WebView tidak tertutup status bar / navigation bar.
+        if (Build.VERSION.SDK_INT >= 35) {
+            web.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+                @Override public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                    android.graphics.Insets b = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                    v.setPadding(0, b.top, 0, b.bottom);
+                    return insets;
+                }
+            });
+        }
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
