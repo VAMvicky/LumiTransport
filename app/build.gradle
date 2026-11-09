@@ -1,9 +1,8 @@
 plugins {
-    id "com.android.application"
+    alias(libs.plugins.android.application)
 }
 
-// Satu sumber versi: release-notes/CURRENT (mis. "2.0", "2.1", "2.1.1").
-// versionCode deterministik: 2.0 -> 20000, 2.1 -> 20100, 2.1.1 -> 20101.
+// Satu sumber versi: release-notes/CURRENT (dihitung juga oleh tools/version.sh).
 def currentVersion = { ->
     new File(rootProject.projectDir, "release-notes/CURRENT").text.trim().replaceFirst("^v", "")
 }
@@ -27,20 +26,47 @@ android {
         versionName currentVersion()
     }
 
-    buildTypes {
+    signingConfigs {
         release {
-            minifyEnabled false
-            // Ganti dengan signingConfig milikmu sebelum rilis ke Play Store.
-            signingConfig signingConfigs.debug
+            def ksPath = System.getenv("KEYSTORE")
+            if (ksPath != null && new File(ksPath).exists()) {
+                storeFile file(ksPath)
+                storePassword System.getenv("KS_PASS")
+                keyAlias(System.getenv("KS_ALIAS") ?: "lumi")
+                keyPassword(System.getenv("KS_PASS"))
+            }
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+
+    buildTypes {
+        release {
+            // R8 + resource shrinking: dibutuhkan supaya APK tidak membawa kode/aset mati.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+
+            def ksPath = System.getenv("KEYSTORE")
+            signingConfig (ksPath != null && new File(ksPath).exists()) ? signingConfigs.release : signingConfigs.debug
+        }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
     androidResources {
         noCompress "woff2"
     }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
+
+dependencies {
+    implementation libs.androidx.profileinstaller
 }
 
 // Bangun ulang data rute sebelum build (butuh python3).
