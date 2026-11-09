@@ -10,6 +10,42 @@
 
 ---
 
+## ✦ v2.3 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### ✨ Baru
+
+- **Rute favorit**: simpan asal → tujuan (maks 20), lalu hitung ulang dengan satu ketuk **Pakai**
+- **App shortcuts**: tekan lama ikon → **Cari rute** atau **Riwayat**
+- **Ubin Quick Settings "Cari rute"**: satu ketuk dari panel notifikasi
+
+### 🔧 Teknis
+
+- Pintasan dari intent disimpan sampai halaman WebView siap, lalu dikirim ke `window.__lumiShortcut`
+- `versionCode` **20300**
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### ✨ New
+
+- **Favourite routes**: save origin → destination (max 20), recompute with one tap
+- **App shortcuts**: long-press the icon → **Search route** or **History**
+- **Quick Settings tile "Search route"**
+
+### 🔧 Technical
+
+- Intent shortcuts are held until the WebView page is ready, then delivered to `window.__lumiShortcut`
+- `versionCode` **20300**
+
+</details>
+
+---
+
 ## ✦ v2.2 — 9 November 2026 / 9 November 2026
 
 <details open>
