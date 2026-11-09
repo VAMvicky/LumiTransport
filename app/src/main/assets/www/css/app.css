@@ -723,3 +723,20 @@ html.pip #guide { top: 0 !important; left: 0 !important; right: 0 !important; bo
 
 /* Kotak tempel teks cadangan */
 .restore-box { width: 100%; box-sizing: border-box; min-height: 76px; margin: 8px 0; padding: 10px; border: 1px solid var(--line); border-radius: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+/* Mode aksesibel */
+body.is-accessible .btn-go,
+body.is-accessible .btn-sec,
+body.is-accessible .chip-loc,
+body.is-accessible .nav-btn,
+body.is-accessible .sg-item,
+body.is-accessible .place-row button { min-height: 52px; }
+body.is-accessible .sg-name,
+body.is-accessible .set-card h3,
+body.is-accessible .field-label { font-size: 15.5px; }
+body.is-accessible .sg-sub,
+body.is-accessible .set-card p { font-size: 13.5px; line-height: 1.5; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
