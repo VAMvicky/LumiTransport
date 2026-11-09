@@ -46,7 +46,11 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
 
             def ksPath = System.getenv("KEYSTORE")
-            signingConfig (ksPath != null && new File(ksPath).exists()) ? signingConfigs.release : signingConfigs.debug
+            if (ksPath != null && new File(ksPath).exists()) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
+            }
         }
     }
 
