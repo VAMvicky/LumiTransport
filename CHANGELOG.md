@@ -10,6 +10,43 @@
 
 ---
 
+## ✦ v2.13 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### ✨ Baru
+
+- Ketuk halte/stasiun di tab Halte: Berangkat dari sini, Pergi ke sini, Lihat posisi bus (khusus halte bus)
+- Tombol ☆ Simpan di hasil pencarian untuk rute favorit
+
+### 🔧 Perbaikan
+
+- Posisi bus untuk satu halte hanya menampilkan rute yang berhenti di halte itu, bus yang akan tiba di atas
+- Penanda bus: panah di titik bus, kode di bawah, ukuran ikut zoom
+- Header menyatu dengan status bar (Android 11+)
+- Penanda warna kartu tarif sejajar judul; jarak seragam di detail perjalanan dan Pengaturan
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### ✨ New
+
+- Tap a stop/station in Stops: Leave from here, Go here, See bus positions (bus stops only)
+- ☆ Save button in search results for favourite routes
+
+### 🔧 Fixes
+
+- Live buses for a stop only show routes serving that stop, arriving buses first
+- Bus markers: arrow on the bus position, code below, size follows zoom
+- Header blends into the status bar (Android 11+)
+- Fare-card colour markers aligned with titles; consistent spacing in trip details and Settings
+
+</details>
+
+---
 ## ✦ v2.12 — 9 November 2026 / 9 November 2026
 
 <details open>

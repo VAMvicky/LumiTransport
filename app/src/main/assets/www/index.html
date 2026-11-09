@@ -199,6 +199,19 @@
       </div>
     </div>
 
+    <!-- Aksi halte/stasiun (tab Halte) -->
+    <div class="modal" id="sheetStop" hidden>
+      <div class="modal-card">
+        <div class="modal-head"><div class="stop-act-h"><small id="stopActKind">Halte</small><h3 id="stopActName">…</h3></div><button class="icon-btn dark" data-close-modal aria-label="Tutup">×</button></div>
+        <div class="stop-act-lines" id="stopActLines"></div>
+        <div class="stop-acts">
+          <button class="btn-sec" id="stopActFrom" type="button">Berangkat dari sini</button>
+          <button class="btn-go" id="stopActTo" type="button">Pergi ke sini</button>
+        </div>
+        <button class="btn-sec stop-act-live" id="stopActLive" type="button"><i class="live-dot"></i>Lihat posisi bus</button>
+      </div>
+    </div>
+
     <!-- Pengaturan -->
     <div class="sheet" id="sheetSettings" hidden>
       <div class="sheet-bar">

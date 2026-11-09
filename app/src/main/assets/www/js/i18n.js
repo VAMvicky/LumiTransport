@@ -42,7 +42,7 @@
     "Lihat posisi bus Transjakarta & Mikrotrans saat ini di peta.": "See where Transjakarta & Mikrotrans buses are right now on the map.",
     "Rute favorit": "Favourite routes", "Pencarian terakhir": "Recent searches", "Moda yang tercakup": "Modes covered",
     "Yang Lumi hitungkan untukmu": "What Lumi plans for you",
-    "Belum ada rute favorit. Cari rute, lalu simpan lewat Pengaturan → Rute favorit.": "No favourite routes yet. Plan a route, then save it in Settings → Favourite routes.",
+    "Belum ada rute favorit. Cari rute, lalu ketuk ☆ Simpan di hasil pencarian.": "No favourite routes yet. Plan a route, then tap ☆ Save in the results.",
     "ke": "to",
     "BRT, non-BRT, Royaltrans": "BRT, non-BRT, Royaltrans",
     "LRT Jakarta & Jabodebek": "LRT Jakarta & Jabodebek",
@@ -222,7 +222,7 @@
     "Belum ada perjalanan. Begitu kamu memulai pendampingan pada sebuah rute, perjalanan itu tercatat di sini beserta ongkosnya.":
       "No trips yet. As soon as you start guidance on a route, the trip is recorded here with its cost.",
     "Hapus riwayat": "Clear history",
-    "Rute tersimpan": "Saved route", "Pakai": "Use", "Belum ada rute favorit. Cari rute, lalu simpan di sini.": "No favourite routes yet. Plan a route, then save it here.",
+    "Rute tersimpan": "Saved route", "Pakai": "Use", 
     "Simpan rute yang sedang aktif": "Save the current route",
     "Cadangkan & pulihkan": "Back up & restore", "Cadangan berisi pengaturan, rute favorit, riwayat perjalanan, dan tempat tersimpan.": "The backup contains settings, favourite routes, trip history and saved places.",
     "Cadangkan (bagikan)": "Back up (share)", "Tempel teks cadangan di sini, lalu ketuk Pulihkan": "Paste the backup text here, then tap Restore",
@@ -298,7 +298,9 @@
     "Dukuh Atas – Harjamukti (Cibubur).": "Dukuh Atas – Harjamukti (Cibubur).",
     "Dukuh Atas – Jati Mulya (Bekasi).": "Dukuh Atas – Jati Mulya (Bekasi).",
     "Jakarta (Halim) – Bandung (Tegalluar/Padalarang). Wajib beli tiket & pilih kursi.": "Jakarta (Halim) – Bandung (Tegalluar/Padalarang). Tickets and seat selection required.",
-    "Arah balik": "Return direction"
+    "Arah balik": "Return direction",
+    "Lihat posisi bus": "See bus positions", "Stasiun": "Station", "Simpan ke favorit": "Save to favourites", "Tersimpan di favorit": "Saved to favourites",
+    "Hapus dari favorit": "Remove from favourites", "Simpan": "Save", "Tersimpan": "Saved"
   };
 
   /* ------------------------------------------------------------ aturan: teks dari data */

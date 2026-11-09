@@ -827,3 +827,67 @@ html[lang="en"] .st-body.is-now .st-place::after { content: "You are here"; }
 #app:has(#onboard) .toast { bottom: calc(150px + var(--safe-b)); }
 .sheet-body { padding-bottom: calc(30px + var(--safe-b)); }
 .settings { padding-bottom: calc(40px + var(--safe-b)); }
+
+/* ===================================================================== v2.13 */
+
+/* Penanda bus: panah tepat di titik bus (di tengah jalan), kode rute di bawah.
+   Wadah berukuran 0×0 di titik bus; isinya diskalakan dari titik itu mengikuti zoom (--bs). */
+.lm-bus-wrap { overflow: visible; }
+.lm-bus2 { position: absolute; left: 0; top: 0; width: 0; height: 0; transform: scale(var(--bs, 1)); transform-origin: 0 0; --c: #1565D8; }
+.lm-bus2 i { position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--c); color: #fff;
+  border: 2.5px solid #fff; box-sizing: border-box; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(10, 30, 60, .35); }
+.lm-bus2 i svg { width: 13px; height: 13px; }
+.lm-bus2 b { position: absolute; left: 0; top: 15px; transform: translateX(-50%); white-space: nowrap; padding: 2px 6px; border-radius: 8px;
+  background: var(--c); color: #fff; border: 1.5px solid #fff; font: 800 10.5px/1.15 "PJS", system-ui, sans-serif; letter-spacing: -.01em;
+  box-shadow: 0 1px 4px rgba(10, 30, 60, .3); }
+.lm-bus2.stale { opacity: .45; }
+.lm-stop-here { width: 18px; height: 18px; border-radius: 6px; background: #fff; border: 4px solid var(--ink); box-sizing: border-box; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+
+/* Aksi halte/stasiun */
+.stop-act-h { flex: 1; min-width: 0; }
+.stop-act-h small { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+.stop-act-h h3 { margin: 0; font-size: 18px; letter-spacing: -0.02em; }
+.stop-act-lines { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.stop-act-lines:empty { display: none; }
+.stop-acts { display: flex; gap: 10px; }
+.stop-acts > button { flex: 1; padding: 13px 10px; border-radius: 14px; font-size: 14px; }
+.stop-acts .btn-sec { background: var(--paper); }
+.stop-act-live { display: flex; width: 100%; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; padding: 13px 10px; border-radius: 14px; font-size: 14px; }
+.stop-act-live[hidden] { display: none; }
+.stop-act-live .live-dot { margin: 0; }
+
+/* Tombol simpan favorit di hasil pencarian */
+.res-fav { display: inline-flex; align-items: center; gap: 5px; padding: 7px 11px 7px 9px; border-radius: 999px; background: #fff;
+  border: 1px solid var(--line); color: var(--ink-soft); font-weight: 700; font-size: 13px; }
+.res-fav svg { width: 15px; height: 15px; fill: none; }
+.res-fav svg path { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.res-fav.on { background: #FFF6DB; border-color: #F5D06B; color: #9A6B00; }
+.res-fav.on svg path { fill: #F5B90B; stroke: #E0A800; }
+.res-head h2 { flex: 1; min-width: 0; }
+
+/* Kartu tarif: penanda warna sejajar dengan judul */
+.info-card h3 { align-items: center; line-height: 1.25; gap: 10px; }
+.info-swatch { flex: none; width: 6px; height: 1.05em; border-radius: 3px; align-self: center; }
+
+/* Kaki detail perjalanan: bagikan, laporkan, lalu keterangan — jarak seragam */
+.trip-foot { display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin-top: 16px; }
+.trip-foot .btn-sec { flex: none; }
+.trip-foot .disclaim { margin: 2px 2px 0; }
+
+/* Kartu pengaturan: satu ritme jarak untuk semua isi kartu.
+   judul → keterangan 6px, antarelemen 12px, antarparagraf 8px. */
+.set-card.set-card > * { margin-top: 0; margin-bottom: 0; }
+.set-card.set-card > * + * { margin-top: 12px; }
+.set-card.set-card > h3 + p, .set-card.set-card > h3 + .sub-h { margin-top: 6px; }
+.set-card.set-card > p + p { margin-top: 8px; }
+.set-card.set-card > .place-row, .set-card.set-card > .place-row + .place-row { margin-top: 0; }
+.set-card.set-card > h3 + .place-row { margin-top: 6px; }
+.set-card.set-card > .place-row + * { margin-top: 12px; }
+.set-card.set-card > .set-row + .set-row { margin-top: 10px; }
+.set-card.set-card > .btn-sec { display: inline-flex; align-items: center; justify-content: center; padding: 11px 16px; }
+.set-card.set-card .set-field { margin-top: 0; }
+.set-card.set-card > * + .set-field { margin-top: 12px; }
+.set-field span { margin-bottom: 8px; }
+.set-card.set-card .restore-box { display: block; margin: 12px 0 0; font-family: inherit; font-size: 13.5px; line-height: 1.45; padding: 11px 12px; border-radius: 12px; resize: vertical; }
+.set-card.set-card .set-actions { margin-top: 12px; }
+.set-card.set-card .chg-list { margin-top: 8px; }

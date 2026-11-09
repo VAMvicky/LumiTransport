@@ -85,9 +85,19 @@ public class MainActivity extends Activity {
         Lang.load(this);
         pendingShortcut = getIntent() == null ? null : getIntent().getStringExtra("lumi_shortcut");
         Window w = getWindow();
-        w.setStatusBarColor(Color.parseColor("#4DB6F4"));
-        w.setNavigationBarColor(Color.parseColor("#FFFFFF"));
-        if (Build.VERSION.SDK_INT >= 26) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            // v2.13: header halaman digambar sampai ke balik status bar (menyatu, tanpa pita warna
+            // terpisah). Inset dikirim ke halaman lewat listener di bawah, sama seperti Android 15.
+            w.setDecorFitsSystemWindows(false);
+            w.setStatusBarColor(Color.TRANSPARENT);
+            w.setNavigationBarColor(Color.TRANSPARENT);
+            w.setNavigationBarContrastEnforced(false);
+            android.view.WindowInsetsController c = w.getInsetsController();
+            if (c != null) c.setSystemBarsAppearance(android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                    android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+        } else {
+            w.setStatusBarColor(Color.parseColor("#4DB6F4"));
+            w.setNavigationBarColor(Color.parseColor("#FFFFFF"));
             w.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         }
 
@@ -140,7 +150,7 @@ public class MainActivity extends Activity {
         //    menabrak status bar. Sekarang dikirim lagi di onPageFinished dan bisa diminta lewat bridge.
         //  - Edge-to-edge membuat adjustResize tidak berlaku: tinggi keyboard dipasang sebagai padding
         //    bawah root agar WebView mengecil, dan nav bawah halaman tidak terdorong/tertutup.
-        if (Build.VERSION.SDK_INT >= 35) {
+        if (Build.VERSION.SDK_INT >= 30) {
             root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
                 @Override public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
                     android.graphics.Insets b = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
