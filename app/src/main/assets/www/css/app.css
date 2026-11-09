@@ -740,3 +740,26 @@ body.is-accessible .set-card p { font-size: 13.5px; line-height: 1.5; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
+/* --------------------------------------------------------- layar lebar (tablet / foldable terbuka) */
+/* Detail perjalanan jadi dua panel: daftar langkah di kiri, peta di kanan. */
+@media (min-width: 900px) and (min-height: 480px) {
+  #sheetTrip {
+    display: grid;
+    grid-template-columns: 420px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  #sheetTrip .sheet-bar { grid-column: 1 / -1; grid-row: 1; }
+  #sheetTrip #tripBody {
+    grid-column: 1; grid-row: 2;
+    border-radius: 0; padding: 16px;
+  }
+  #sheetTrip #tripBody::before { display: none; }
+  #sheetTrip #tripMap {
+    grid-column: 2; grid-row: 2;
+    height: auto; min-height: 0;
+  }
+  /* Sheet lain tidak melebar berlebihan di layar besar. */
+  #sheetSettings .settings, #sheetLine .sheet-body, #sheetLive .sheet-body {
+    max-width: 820px; width: 100%; margin: 0 auto;
+  }
+}
