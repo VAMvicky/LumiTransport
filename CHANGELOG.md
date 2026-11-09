@@ -10,6 +10,53 @@
 
 ---
 
+## ✦ v2.11 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### 🔧 Perbaikan
+
+- Warna header menyambung ke status bar; jarak ke navigation bar tidak dobel
+- Logo header memakai ikon aplikasi baru
+- Tentang Lumi pindah ke Pengaturan
+- Jarak teks dan checkbox Aksesibilitas diperlebar
+- Saran alamat OpenStreetMap dihapus (kembali ke alur Bagikan Google Maps)
+
+### ✨ Baru
+
+- Mengetuk halte membuka bus langsung pada titik halte itu
+- Kamus bahasa Inggris diperluas untuk Pengaturan, Tentang, live bus, riwayat, favorit
+
+### 🔧 Teknis
+
+- `versionCode` **21100**
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### 🔧 Fixes
+
+- Header colour now runs into the status bar; the gap above the navigation bar is no longer doubled
+- Header logo uses the new app icon
+- About moved into Settings
+- More spacing between labels and checkboxes under Accessibility
+- OpenStreetMap suggestions removed (back to the Google Maps share flow)
+
+### ✨ New
+
+- Tapping a stop opens live buses at that stop
+- Broader English dictionary for Settings, About, live buses, history and favourites
+
+### 🔧 Technical
+
+- `versionCode` **21100**
+
+</details>
+
+---
 ## ✦ v2.10 — 9 November 2026 / 9 November 2026
 
 <details open>
