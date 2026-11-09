@@ -10,6 +10,38 @@
 
 ---
 
+## ✦ v2.7 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### ✨ Baru
+
+- **Panduan suara**: langkah pendampingan dibacakan, hanya saat berubah; berhenti bersama pendampingan
+- **Tata letak dua panel** untuk tablet/foldable: daftar langkah di kiri, peta di kanan
+
+### 🔧 Teknis
+
+- `versionCode` **20700**
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### ✨ New
+
+- **Voice guidance**: guidance steps are spoken, only when they change, and stop with the guidance
+- **Two-pane layout** for tablets/foldables: steps on the left, map on the right
+
+### 🔧 Technical
+
+- `versionCode` **20700**
+
+</details>
+
+---
+
 ## ✦ v2.6 — 9 November 2026 / 9 November 2026
 
 <details open>
