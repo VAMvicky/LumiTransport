@@ -1202,6 +1202,8 @@
   });
 
   var sgTimer, sgSeq = 0;
+  /* Pencarian alamat OpenStreetMap (Photon). Gratis, tanpa API key. */
+  var osmSeq = 0, osmPending = null;
   var ICO_PIN = '<svg viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.4" fill="currentColor"/></svg>';
   var ICO_STAR = '<svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="currentColor"/></svg>';
   var ICO_LINK = '<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -1235,8 +1237,40 @@
     savedPlaces().filter(function (x) { return !q || x.name.toLowerCase().indexOf(lq) >= 0 || (x.sub || "").toLowerCase().indexOf(lq) >= 0; })
       .slice(0, 8).forEach(function (x) { rows.push({ name: x.name, sub: x.sub || "Dari Google Maps", p: x.p, kind: "saved" }); });
     paintSuggest(rows, "");
+    /* Ketik ≥3 huruf: cari alamat sungguhan di OpenStreetMap, tanpa harus keluar ke Google Maps. */
+    osmPending = null;
+    if (q.length >= 3 && !isUrl(q) && window.LumiNative && LumiNative.http) {
+      var seq = ++osmSeq;
+      osmPending = { seq: seq, rows: rows };
+      osmLookup(q, seq);
+    }
   }
-  function hideSuggest() { sgSeq++; clearTimeout(sgTimer); $("#suggest").hidden = true; }
+
+  /* Ambil saran alamat dari Photon (OpenStreetMap), lalu sisipkan setelah baris pertama. */
+  function osmLookup(q, seq) {
+    var url = "https://photon.komoot.io/api/?q=" + encodeURIComponent(q) +
+      "&lang=id&limit=6&lat=-6.2&lon=106.816&location_bias_scale=0.3";
+    http(url, 9000).then(function (res) {
+      if (!osmPending || osmPending.seq !== seq) return;
+      var fs = (res && res.features) || [], out = [];
+      for (var i = 0; i < fs.length && out.length < 6; i++) {
+        var f = fs[i] || {}, pr = f.properties || {}, g = f.geometry || {}, c = g.coordinates || [];
+        if (pr.countrycode && String(pr.countrycode).toUpperCase() !== "ID") continue;
+        if (!c || c.length < 2) continue;
+        var name = pr.name || pr.street || pr.city || "";
+        if (!name) continue;
+        var parts = [pr.street, pr.district, pr.city, pr.state].filter(function (x, k, a) { return x && a.indexOf(x) === k; });
+        out.push({ name: name, sub: parts.join(", ") || "OpenStreetMap", p: [c[1], c[0]] });
+      }
+      if (!out.length) return;
+      var rows = osmPending.rows.slice();
+      for (var j = 0; j < out.length; j++) {
+        rows.splice(1 + j, 0, { kind: "place", name: out[j].name, sub: out[j].sub, p: out[j].p });
+      }
+      paintSuggest(rows, "Saran alamat: OpenStreetMap");
+    }).catch(function () { /* offline / kuota habis: saran lama tetap tampil */ });
+  }
+  function hideSuggest() { sgSeq++; osmPending = null; clearTimeout(sgTimer); $("#suggest").hidden = true; }
   document.addEventListener("click", function (e) {
     if (!e.target.closest("#suggest") && !e.target.closest(".field")) hideSuggest();
   });
