@@ -700,7 +700,6 @@ public class MainActivity extends Activity {
             }});
         }
 
-        @JavascriptInterface
         /** Versi aplikasi (versionName) untuk layar Tentang dan laporan bug. */
         @JavascriptInterface
         public String versionName() {
@@ -708,6 +707,7 @@ public class MainActivity extends Activity {
             catch (Exception e) { return "0"; }
         }
 
+        @JavascriptInterface
         public void openUrl(final String url) {
             main.post(new Runnable() { @Override public void run() { openExternal(url); }});
         }
