@@ -10,6 +10,40 @@
 
 ---
 
+## ✦ v2.2 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### ✨ Baru
+
+- **Tentang Lumi** kini menampilkan versi otomatis, lisensi GPL-3.0, tautan repo, tombol **Cek update** (GitHub Releases), dan **Laporkan masalah** (issue baru berisi versi + user agent)
+- **Riwayat perjalanan & ongkos**: tiap pendampingan yang dimulai tercatat (asal, tujuan, tanggal, menit, ongkos, moda), lengkap dengan ringkasan **bulan berjalan** dan tombol hapus
+
+### 🔧 Perbaikan
+
+- Teks setelan alamat: pencarian OpenStreetMap di aplikasi sebagai cara utama, Google Maps lewat Bagikan sebagai cadangan
+- `versionCode` **20200**
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### ✨ New
+
+- **About** now shows the automatic version, GPL-3.0 licence, repository link, **Check for updates** (GitHub Releases) and **Report an issue** (prefilled version + user agent)
+- **Trip history & fares**: each started guidance session is recorded (origin, destination, date, minutes, fare, modes), with a **current month** summary and a clear button
+
+### 🔧 Fixes
+
+- Address settings text: in-app OpenStreetMap search first, Google Maps via Share as fallback
+- `versionCode` **20200**
+
+</details>
+
+---
+
 ## ✦ v2.1 — 9 November 2026 / 9 November 2026
 
 <details open>
