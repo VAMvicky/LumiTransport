@@ -35,7 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Lumi Transportation — kerangka native.
+ * Lumi Transport â€” kerangka native.
  * UI dan mesin rute berjalan di WebView (assets/www). Kelas ini menyediakan jembatan
  * "LumiNative" untuk: HTTP (geocoding/rute jalan, dengan User-Agent yang jelas),
  * lokasi GPS, membuka aplikasi ojol, dan berbagi teks.
@@ -52,6 +52,26 @@ public class MainActivity extends Activity {
     private String pendingShare;
     private boolean pageReady;
     private String[] pendingGuide;
+    private final Object liveLock = new Object();
+    private LiveSocket live;
+    private volatile java.util.Set<String> liveFilterSet;
+    private final java.util.ArrayList<String> liveQueue = new java.util.ArrayList<String>();
+    private boolean liveFlushPending;
+
+    /** Kirim data bus ke JS paling sering tiap 250 ms (digabung) agar WebView tidak kewalahan. */
+    private void scheduleLiveFlush() {
+        synchronized (liveLock) { if (liveFlushPending) return; liveFlushPending = true; }
+        main.postDelayed(new Runnable() { @Override public void run() {
+            StringBuilder sb = new StringBuilder("[");
+            synchronized (liveLock) {
+                for (int i = 0; i < liveQueue.size(); i++) { if (i > 0) sb.append(','); sb.append('"').append(liveQueue.get(i)).append('"'); }
+                liveQueue.clear();
+                liveFlushPending = false;
+            }
+            sb.append(']');
+            if (web != null) web.evaluateJavascript("window.LumiLive && LumiLive.__nativeData(" + sb + ")", null);
+        }}, 250);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +90,7 @@ public class MainActivity extends Activity {
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
         // Identitas aplikasi untuk server peta (aturan pemakaian ubin OpenStreetMap meminta User-Agent yang jelas).
-        s.setUserAgentString(s.getUserAgentString() + " LumiTransportation/2.3 (Android)");
+        s.setUserAgentString(s.getUserAgentString() + " LumiTransportation/2.4 (Android)");
         s.setDatabaseEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(true);
         s.setUserAgentString(s.getUserAgentString() + " LumiTransportation/1.0");
@@ -119,7 +139,7 @@ public class MainActivity extends Activity {
         requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, REQ_NOTIF);
     }
 
-    /** Teks yang dibagikan dari aplikasi lain (mis. Google Maps: "Nama tempat\nhttps://maps.app.goo.gl/…"). */
+    /** Teks yang dibagikan dari aplikasi lain (mis. Google Maps: "Nama tempat\nhttps://maps.app.goo.gl/â€¦"). */
     private static String sharedText(Intent i) {
         if (i == null || !Intent.ACTION_SEND.equals(i.getAction())) return null;
         CharSequence subj = i.getCharSequenceExtra(Intent.EXTRA_SUBJECT);
@@ -175,7 +195,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
-        // Android 8–11: tombol Home saat pendampingan → jendela kecil.
+        // Android 8â€“11: tombol Home saat pendampingan â†’ jendela kecil.
         if (Build.VERSION.SDK_INT >= 26 && Build.VERSION.SDK_INT < 31 && NavService.tracker != null) enterPip();
     }
     private long pipExitAt, stoppedAt;
@@ -183,7 +203,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() { super.onStart(); stopped = false; }
     /*
-     * Jendela PiP ditutup (tombol × / diusap) = aplikasi ditutup: pendampingan berhenti dan tugas dihapus.
+     * Jendela PiP ditutup (tombol Ã— / diusap) = aplikasi ditutup: pendampingan berhenti dan tugas dihapus.
      * Urutan callback berbeda antar-HP: kadang "keluar PiP" datang dulu lalu onStop, kadang onStop dulu.
      * Keduanya ditangani. Membesarkan PiP ke layar penuh tidak memicu onStop, jadi tidak ikut tertutup;
      * layar mati saat PiP juga tidak (masih dalam mode PiP).
@@ -281,7 +301,8 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         NavService.listener = null;
         compassOn(false);
-        // Aplikasi ditutup (bukan sekadar diputar/dibuat ulang) → pendampingan ikut berhenti.
+        synchronized (liveLock) { if (live != null) { live.close(); live = null; } liveQueue.clear(); }
+        // Aplikasi ditutup (bukan sekadar diputar/dibuat ulang) â†’ pendampingan ikut berhenti.
         if (isFinishing() || wasPip) NavService.stop(this);
         pool.shutdownNow();
         if (web != null) web.destroy();
@@ -397,7 +418,7 @@ public class MainActivity extends Activity {
 
     /**
      * Koordinat TEMPAT dari URL Google Maps. Hanya pola yang menunjuk tempat itu sendiri:
-     * "!3d<lat>!4d<lon>" (data tempat), atau "/place/…/@lat,lon" dan "?q=lat,lon".
+     * "!3d<lat>!4d<lon>" (data tempat), atau "/place/â€¦/@lat,lon" dan "?q=lat,lon".
      * Koordinat tampilan peta di HTML (sering = perkiraan lokasi pengguna) sengaja diabaikan.
      */
     static String placeCoords(String url) {
@@ -627,7 +648,7 @@ public class MainActivity extends Activity {
                             }
                             if (found == null) {
                                 m = COORD_PATTERNS[0].matcher(html.length() > 400000 ? html.substring(0, 400000) : html);
-                                // "!3d…!4d…" di HTML halaman /place/ = tempat itu sendiri
+                                // "!3dâ€¦!4dâ€¦" di HTML halaman /place/ = tempat itu sendiri
                                 if (url.contains("/place/") && m.find()) {
                                     double la = Double.parseDouble(m.group(1)), lo = Double.parseDouble(m.group(2));
                                     if (inIndonesia(la, lo)) found = la + "," + lo;
@@ -799,7 +820,7 @@ public class MainActivity extends Activity {
             }});
         }
 
-        /** Buka pengaturan "Mulai otomatis" (Xiaomi, Oppo, Vivo, Realme, Infinix, …); cadangan: info aplikasi. */
+        /** Buka pengaturan "Mulai otomatis" (Xiaomi, Oppo, Vivo, Realme, Infinix, â€¦); cadangan: info aplikasi. */
         @JavascriptInterface
         public void openAutostart() {
             main.post(new Runnable() { @Override public void run() {
@@ -857,6 +878,121 @@ public class MainActivity extends Activity {
             }});
         }
 
+        /** HTTP POST dengan header tambahan (JSON objek) dan body JSON; hasil ke window.__lumiHttp. */
+        @JavascriptInterface
+        public void httpPost(final String id, final String url, final String headersJson, final String body) {
+            pool.execute(new Runnable() { @Override public void run() {
+                int status = 0;
+                String out = "";
+                HttpURLConnection c = null;
+                try {
+                    c = (HttpURLConnection) new URL(url).openConnection();
+                    c.setRequestMethod("POST");
+                    c.setDoOutput(true);
+                    c.setRequestProperty("User-Agent", UA);
+                    c.setRequestProperty("Accept-Language", "id,en");
+                    c.setRequestProperty("Accept", "application/json");
+                    c.setRequestProperty("Content-Type", "application/json");
+                    if (headersJson != null && headersJson.length() > 2) {
+                        JSONObject h = new JSONObject(headersJson);
+                        java.util.Iterator<String> it = h.keys();
+                        while (it.hasNext()) { String k = it.next(); c.setRequestProperty(k, h.getString(k)); }
+                    }
+                    c.setConnectTimeout(12000);
+                    c.setReadTimeout(15000);
+                    if (body != null && body.length() > 0) {
+                        java.io.OutputStream os = c.getOutputStream();
+                        os.write(body.getBytes("UTF-8"));
+                        os.flush();
+                        os.close();
+                    }
+                    status = c.getResponseCode();
+                    InputStream in = status >= 400 ? c.getErrorStream() : c.getInputStream();
+                    if (in != null) out = readAll(in);
+                } catch (Exception e) {
+                    status = 0;
+                    out = String.valueOf(e.getMessage());
+                } finally {
+                    if (c != null) c.disconnect();
+                }
+                js("window.__lumiHttp(" + JSONObject.quote(id) + "," + status + "," + JSONObject.quote(out) + ")");
+            }});
+        }
+
+        /** Notifikasi "bus makin dekat" (kanal sendiri, prioritas tinggi). */
+        @JavascriptInterface
+        public void busNotify(final String title, final String text) {
+            main.post(new Runnable() { @Override public void run() {
+                try {
+                    android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                    if (nm == null) return;
+                    String ch = "lumi_bus";
+                    if (Build.VERSION.SDK_INT >= 26) {
+                        android.app.NotificationChannel c = new android.app.NotificationChannel(ch, "Info bus", android.app.NotificationManager.IMPORTANCE_HIGH);
+                        c.setDescription("Bus yang kamu tunggu semakin dekat");
+                        nm.createNotificationChannel(c);
+                    }
+                    String body = text == null ? "" : text;
+                    android.app.Notification.Builder b = Build.VERSION.SDK_INT >= 26
+                            ? new android.app.Notification.Builder(MainActivity.this, ch)
+                            : new android.app.Notification.Builder(MainActivity.this);
+                    b.setSmallIcon(android.R.drawable.ic_dialog_info)
+                     .setContentTitle(title == null ? "Info bus" : title)
+                     .setContentText(body)
+                     .setStyle(new android.app.Notification.BigTextStyle().bigText(body))
+                     .setAutoCancel(true);
+                    nm.notify(7003, b.build());
+                } catch (Throwable ignored) { }
+            }});
+        }
+
+        /* ---- posisi bus langsung: WebSocket native (byte MQTT diteruskan ke live.js) ---- */
+        @JavascriptInterface
+        public void liveOpen(final String url) {
+            synchronized (liveLock) {
+                if (live != null) live.close();
+                liveQueue.clear();
+                live = new LiveSocket(url, new LiveSocket.Listener() {
+                    public void onOpen() { js("window.LumiLive && LumiLive.__nativeOpen()"); }
+                    public void onData(byte[] d) {
+                        synchronized (liveLock) { liveQueue.add(android.util.Base64.encodeToString(d, android.util.Base64.NO_WRAP)); }
+                        scheduleLiveFlush();
+                    }
+                    public void onClose(String reason) { js("window.LumiLive && LumiLive.__nativeClose(" + JSONObject.quote(reason) + ")"); }
+                });
+                live.filter = liveFilterSet;
+                live.start();
+            }
+        }
+
+        /** Daftar kode rute yang ingin diterima (JSON array); kosong = semua. */
+        @JavascriptInterface
+        public void liveFilter(String json) {
+            try {
+                org.json.JSONArray a = new org.json.JSONArray(json);
+                java.util.Set<String> f = new java.util.HashSet<String>();
+                for (int i = 0; i < a.length(); i++) f.add(LiveSocket.norm(a.getString(i)));
+                LiveSocket l = live;
+                if (l != null) l.filter = f.isEmpty() ? null : f;
+                liveFilterSet = f.isEmpty() ? null : f;
+            } catch (Exception ignored) { }
+        }
+
+        /** Jumlah byte yang diterima koneksi saat ini (untuk info pemakaian kuota). */
+        @JavascriptInterface
+        public double liveBytes() { LiveSocket l = live; return l == null ? 0 : l.bytesIn; }
+
+        @JavascriptInterface
+        public void liveSend(String b64) {
+            LiveSocket l = live;
+            if (l != null) l.send(android.util.Base64.decode(b64, android.util.Base64.NO_WRAP));
+        }
+
+        @JavascriptInterface
+        public void liveClose() {
+            synchronized (liveLock) { if (live != null) live.close(); live = null; liveQueue.clear(); }
+        }
+
         /** Buka aplikasi resmi TJ (pelacak bus resmi); bila belum terpasang, buka Play Store. */
         @JavascriptInterface
         public void openTjApp() {
@@ -872,7 +1008,8 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public String version() {
-            return "2.3";
+            return "2.4";
         }
     }
 }
+
