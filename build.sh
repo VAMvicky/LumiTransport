@@ -29,17 +29,9 @@ TARGET_SDK=34
 OUT=build
 APP=app/src/main
 
-VER=$(tr -d ' \r\n' < release-notes/CURRENT)
-VER=${VER#v}
-MAJ=${VER%%.*}
-REST=${VER#*.}
-if [ "$REST" = "$VER" ]; then
-  MIN=0; PAT=0
-else
-  MIN=${REST%%.*}
-  if [ "$REST" = "$MIN" ]; then PAT=0; else PAT=${REST#*.}; fi
-fi
-CODE=$(( MAJ * 10000 + MIN * 100 + PAT ))
+VER=""
+CODE=""
+read -r VER CODE < <(bash tools/version.sh)
 APK_NAME="LumiTransport-v$VER.apk"
 echo "versi: $VER (versionCode $CODE, minSdk $MIN_SDK)"
 
