@@ -701,6 +701,13 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        /** Versi aplikasi (versionName) untuk layar Tentang dan laporan bug. */
+        @JavascriptInterface
+        public String versionName() {
+            try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; }
+            catch (Exception e) { return "0"; }
+        }
+
         public void openUrl(final String url) {
             main.post(new Runnable() { @Override public void run() { openExternal(url); }});
         }
