@@ -228,6 +228,14 @@
     clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("show"); }, 2600);
   }
   window.lumiToast = toast;
+  /* Tinggi status bar / navigation bar dari Android, dipakai CSS (--safe-top/--safe-bottom). */
+  window.__lumiInsets = function (top, bottom) {
+    try {
+      var r = document.documentElement.style;
+      r.setProperty("--safe-t", (top || 0) + "px");
+      r.setProperty("--safe-b", (bottom || 0) + "px");
+    } catch (e) { }
+  };
   function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem("lumi:" + k)); localStorage.setItem("lumi:" + k, JSON.stringify(v)); } catch (e) { return null; } }
 
   /* ------------------------------------------------------- riwayat perjalanan */
@@ -300,7 +308,7 @@
     $$("#stopList .stop-row").forEach(function (b) {
       b.addEventListener("click", function () {
         var s = list[+b.dataset.stop];
-        if (s) openPicker(S.field || "from", { center: s.p, zoom: 17, title: s.n });
+        if (s) openLiveAt(s.p, s.n);
       });
     });
   }
@@ -633,7 +641,11 @@
 
   /* ---- layar "Bus di sekitarmu" */
   var liveMap, nearBoard = null;
-  function openLiveNear() {
+  function openLiveNear() { openLiveAt(null, null); }
+  function openLiveAt(center, title) {
+    var sheet = $("#sheetLive"); if (!sheet) return;
+    var titleEl = $("#sheetLive .sheet-title");
+    if (titleEl) titleEl.textContent = title || "Bus di sekitarmu";
     var sheet = $("#sheetLive"); if (!sheet) return;
     sheet.hidden = false;
     $("#liveBody").innerHTML = '<div class="live-card"><b>Mencari lokasimu…</b><p>Lumi akan menampilkan bus Transjakarta, Mikrotrans, dan Royaltrans yang melintas di sekitarmu.</p></div>';
@@ -671,7 +683,7 @@
             '<em class="tnum">' + (b.dist < 1 ? Math.round(b.dist * 1000) + " m" : b.dist.toFixed(1).replace(".", ",") + " km") + "</em></li>";
         }).join("") + "</ul>";
         html += '<p class="disclaim">Posisi dari feed armada Transjakarta (diperbarui tiap beberapa detik). Lumi tidak berafiliasi dengan Transjakarta.</p>';
-        $("#liveBody").innerHTML = html;
+        $("#liveBody").innerHTML = tr(html);
         bindTjApp($("#liveBody"));
         $$("[data-bus]", $("#liveBody")).forEach(function (li) {
           li.addEventListener("click", function () { var b = nearBoard.buses[li.dataset.bus]; if (b) liveMap.setView([b.lat, b.lon], 17); });
@@ -683,6 +695,7 @@
       stopWhenHidden(sheet, nearBoard);
       render();
     };
+    if (center) { go(center); return; }
     if (S.myPos) go(S.myPos);
     locate().then(function (o) { if (!S.myPos || E.hav(S.myPos, [o.lat, o.lon]) > 0.15) go([o.lat, o.lon]); })
       .catch(function (e) { if (!S.myPos) $("#liveBody").innerHTML = '<div class="live-card"><b>Lokasi tidak tersedia</b><p>' + esc(e.message || "Aktifkan GPS lalu coba lagi.") + "</p></div>"; });
@@ -1312,7 +1325,7 @@
         ["#tab-stops p", "Find a Transjakarta stop or a KRL, MRT, LRT and Airport Rail station."],
         ["#tab-history h1", "History"],
         ["#tab-history p", "Trips you started, with their fares."],
-        ["#inStop", "Search stop or station"]
+
       ],
       attr: [
         ["#inFrom", "placeholder", "From: address, stop, or place"],
@@ -1320,7 +1333,8 @@
         ["#inLine", "placeholder", "Search route: 9, 13C, Bogor, MRT, Blok M…"],
         ["#btnSettings", "aria-label", "Settings"],
         ["#btnSwap", "aria-label", "Swap origin and destination"],
-        ["#btnLocate", "aria-label", "Use my location"]
+        ["#btnLocate", "aria-label", "Use my location"],
+        ["#inStop", "placeholder", "Search stop or station"]
       ]
     }
   };
@@ -1330,6 +1344,37 @@
      riwayat, favorit, cadangan). Penggantian berbasis frasa, jadi aman untuk
      HTML dan tidak menyentuh angka/nama tempat. */
   var TR = {
+    "Perencana rute bekerja offline di ponsel; internet hanya dipakai untuk peta, pencarian alamat, dan jarak jalan untuk estimasi ojol.": "Route planning runs offline on the phone; the internet is only used for maps, address search and walking distances for ride-hailing estimates.",
+    "Huruf lebih besar, tombol lebih tinggi, dan animasi dikurangi. Panduan suara membacakan langkah saat pendampingan berjalan.": "Larger text, taller buttons and reduced animation. Voice guidance reads the steps out during guidance.",
+    "Lisensi": "Licence",
+    "Repo GitHub": "GitHub repo",
+    "Tidak ada halte atau stasiun yang cocok.": "No matching stop or station.",
+    "Belum ada rute favorit. Cari rute, lalu simpan lewat Pengaturan → Rute favorit.": "No favourite routes yet. Plan a route, then save it in Settings → Favourite routes.",
+    "Mencari lokasimu": "Finding your location",
+    "Menunggu posisi bus": "Waiting for bus positions",
+    "Lokasi tidak tersedia": "Location unavailable",
+    "Tidak ada rute bus di dekatmu": "No bus routes near you",
+    "Bus di sekitarmu": "Buses near you",
+    "Dari Google Maps": "From Google Maps",
+    "Lokasi saya sekarang": "My current location",
+    "Pakai GPS ponsel": "Use the phone GPS",
+    "Cari di Google Maps": "Search on Google Maps",
+    "Pilih tempatnya, lalu Bagikan": "Pick the place, then Share",
+    "Pengaturan": "Settings",
+    "Bahasa aplikasi": "App language",
+    "Mode aksesibel": "Accessible mode",
+    "Panduan suara": "Voice guidance",
+    "Riwayat perjalanan": "Trip history",
+    "Rute favorit": "Favourite routes",
+    "Tempat tersimpan": "Saved places",
+    "Mencari alamat": "Finding addresses",
+    "Peta": "Map",
+    "Gaya peta": "Map style",
+    "Cadangkan &amp; pulihkan": "Backup &amp; restore",
+    "Aksesibilitas": "Accessibility",
+    "Tentang Lumi": "About Lumi",
+    "Cek update": "Check for updates",
+    "Laporkan masalah": "Report an issue",
     "pilihan transportasi umum": "public transport options",
     "pilihan ojol": "ride-hailing options",
     "Tidak ada opsi dengan": "No options with",
@@ -1577,13 +1622,6 @@
     savedPlaces().filter(function (x) { return !q || x.name.toLowerCase().indexOf(lq) >= 0 || (x.sub || "").toLowerCase().indexOf(lq) >= 0; })
       .slice(0, 8).forEach(function (x) { rows.push({ name: x.name, sub: x.sub || "Dari Google Maps", p: x.p, kind: "saved" }); });
     paintSuggest(rows, "");
-    /* Ketik ≥3 huruf: cari alamat sungguhan di OpenStreetMap, tanpa harus keluar ke Google Maps. */
-    osmPending = null;
-    if (q.length >= 3 && !isUrl(q) && window.LumiNative && LumiNative.http) {
-      var seq = ++osmSeq;
-      osmPending = { seq: seq, rows: rows };
-      osmLookup(q, seq);
-    }
   }
 
   /* Ambil saran alamat dari Photon (OpenStreetMap), lalu sisipkan setelah baris pertama. */
@@ -2612,15 +2650,16 @@
       "<li>Urutan stasiun KRL, MRT, LRT, KA Bandara: Wikipedia & pengumuman operator (2026).</li>" +
       "<li>Peta: OpenFreeMap © OpenMapTiles, data © OpenStreetMap contributors. Alamat: Google Maps (dibagikan ke Lumi). Jarak jalan untuk ojol: OSRM.</li></ul>" +
       "<p>Data mencakup " + (c.TJ || 0) + " rute Transjakarta, " + (c.MIKRO || 0) + " Mikrotrans, " + (c.ROYAL || 0) + " Royaltrans, " + (c.KRL || 0) + " lintas KRL, MRT, " + ((c.LRT || 0) + (c.LRTJ || 0)) + " lintas LRT, KA Bandara, dan Whoosh.</p></div>";
-    html += '<div class="info-card" id="aboutCard"><h3>Tentang Lumi</h3>' +
+    $("#infoBody").innerHTML = tr(html);
+    $$("#infoBody [data-url]").forEach(function (a) { a.addEventListener("click", function () { NATIVE ? NATIVE.openUrl(a.dataset.url) : window.open(a.dataset.url); }); });
+  }
+
+  /* Kartu Tentang (dipindah ke Pengaturan). */
+  function aboutCardHTML() {
+    return '<div class="set-card" id="aboutCard"><h3>Tentang Lumi</h3>' +
       '<p><b>Lumi Transport</b> v' + esc(appVersion()) + '. Perencana rute bekerja offline di ponsel; internet hanya dipakai untuk peta, pencarian alamat, dan jarak jalan untuk estimasi ojol.</p>' +
       '<p>Lisensi <a data-url="https://github.com/VAMvicky/LumiTransport/blob/main/LICENSE">GPL-3.0</a> · <a data-url="https://github.com/VAMvicky/LumiTransport">Repo GitHub</a></p>' +
       '<p><button type="button" class="about-btn" id="btnUpdate">Cek update</button><button type="button" class="about-btn" id="btnReport">Laporkan masalah</button></p></div>';
-    $("#infoBody").innerHTML = tr(html);
-    var aboutUp = $("#btnUpdate"), aboutRep = $("#btnReport");
-    if (aboutUp) aboutUp.addEventListener("click", checkUpdate);
-    if (aboutRep) aboutRep.addEventListener("click", reportIssue);
-    $$("#infoBody [data-url]").forEach(function (a) { a.addEventListener("click", function () { NATIVE ? NATIVE.openUrl(a.dataset.url) : window.open(a.dataset.url); }); });
   }
 
   /* ------------------------------------------------------- tentang, update, laporan */
@@ -2778,7 +2817,12 @@
     html += backupCardHTML();
     html += accessCardHTML();
     html += langCardHTML();
+    html += aboutCardHTML();
     $("#settingsBody").innerHTML = tr(html);
+    var aboutUp = $("#btnUpdate"), aboutRep = $("#btnReport");
+    if (aboutUp) aboutUp.addEventListener("click", checkUpdate);
+    if (aboutRep) aboutRep.addEventListener("click", reportIssue);
+    $$("#settingsBody [data-url]").forEach(function (a) { a.addEventListener("click", function () { openExt(a.dataset.url); }); });
     var langSel = $("#setLang");
     if (langSel) langSel.addEventListener("change", function () {
       var c = cfg(); c.lang = this.value === "en" ? "en" : "id"; store("cfg", c); applyLang();
