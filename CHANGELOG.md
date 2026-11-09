@@ -10,6 +10,38 @@
 
 ---
 
+## ✦ v2.8 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### ✨ Baru
+
+- **Laporkan halte/rute salah** dari detail perjalanan; issue sudah terisi asal/tujuan, koordinat, kode rute, versi, dan user agent
+- **Bahasa Inggris diperluas** ke langkah perjalanan (*Get ready to alight*, *Alight now*, *Walk*, *Depart*, *Arrive*, *Board*, *Alight*) dan satuan menit/transit
+
+### 🔧 Teknis
+
+- `versionCode` **20800**
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### ✨ New
+
+- **Report a wrong stop/route** from the trip detail; the issue is pre-filled with origin/destination, coordinates, route codes, version and user agent
+- **Broader English coverage**: trip steps (*Get ready to alight*, *Alight now*, *Walk*, *Depart*, *Arrive*, *Board*, *Alight*) plus minute/transfer units
+
+### 🔧 Technical
+
+- `versionCode` **20800**
+
+</details>
+
+---
+
 ## ✦ v2.7 — 9 November 2026 / 9 November 2026
 
 <details open>
