@@ -10,6 +10,46 @@
 
 ---
 
+## ✦ v2.1 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### ✨ Baru
+
+- **Cari alamat di dalam aplikasi**: ketik ≥ 3 huruf di kolom asal/tujuan dan saran alamat muncul langsung dari **OpenStreetMap (Photon)** — tanpa API key, tanpa keluar aplikasi
+- Hasil disaring ke **Indonesia** dengan bias **Jabodetabek**
+- Baris **"Cari … di Google Maps"** dan alur **Bagikan → Lumi Transport** tetap ada untuk alamat yang tidak ditemukan OSM
+
+### 🔧 Teknis
+
+- Build pindah ke **Gradle 8.7** + `gradle/libs.versions.toml` (satu katalog versi)
+- **R8 + `shrinkResources`** aktif, dengan aturan keep untuk jembatan `LumiNative`
+- Rilis APK diambil dari build Gradle; `versionCode` **20100**
+- **User-Agent tunggal** dari `versionName`
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### ✨ New
+
+- **In-app address search**: type at least 3 characters in the origin/destination field and suggestions appear from **OpenStreetMap (Photon)** — no API key, no leaving the app
+- Results filtered to **Indonesia** and biased to **Greater Jakarta**
+- The **"Search … on Google Maps"** row and the **Share → Lumi Transport** flow remain for addresses OSM does not have
+
+### 🔧 Technical
+
+- Build moved to **Gradle 8.7** + `gradle/libs.versions.toml`
+- **R8 + `shrinkResources`** enabled, with keep rules for the `LumiNative` bridge
+- Release APK now comes from the Gradle build; `versionCode` **20100**
+- **Single User-Agent** derived from `versionName`
+
+</details>
+
+---
+
 ## ✦ v2.0 — rilis pertama
 
 <details open>
