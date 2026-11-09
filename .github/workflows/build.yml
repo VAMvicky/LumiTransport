@@ -40,22 +40,14 @@ jobs:
         id: ver
         run: |
           set -euo pipefail
-          V=$(tr -d ' \r\n' < release-notes/CURRENT)
-          V=${V#v}
-          if ! [[ "$V" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
-            echo "::error::release-notes/CURRENT tidak valid: '$V' (harus 2.0 / 2.1 / 2.1.1)"
-            exit 1
-          fi
-          MAJ=${V%%.*}; REST=${V#*.}
-          if [ "$REST" = "$V" ]; then MIN=0; PAT=0; else
-            MIN=${REST%%.*}
-            if [ "$REST" = "$MIN" ]; then PAT=0; else PAT=${REST#*.}; fi
-          fi
-          CODE=$(( MAJ * 10000 + MIN * 100 + PAT ))
+          read -r V CODE < <(bash tools/version.sh)
           echo "version=$V"  >> "$GITHUB_OUTPUT"
           echo "code=$CODE"  >> "$GITHUB_OUTPUT"
           echo "apk=LumiTransport-v$V.apk" >> "$GITHUB_OUTPUT"
           echo "versi $V (versionCode $CODE), APK: LumiTransport-v$V.apk"
+
+      - name: Test skema versi (gagal = build merah)
+        run: bash tools/test_version.sh
 
       - name: Siapkan alat build Android (tanpa Gradle)
         run: |
