@@ -2233,9 +2233,42 @@
       "<li>Urutan stasiun KRL, MRT, LRT, KA Bandara: Wikipedia & pengumuman operator (2026).</li>" +
       "<li>Peta: OpenFreeMap © OpenMapTiles, data © OpenStreetMap contributors. Alamat: Google Maps (dibagikan ke Lumi). Jarak jalan untuk ojol: OSRM.</li></ul>" +
       "<p>Data mencakup " + (c.TJ || 0) + " rute Transjakarta, " + (c.MIKRO || 0) + " Mikrotrans, " + (c.ROYAL || 0) + " Royaltrans, " + (c.KRL || 0) + " lintas KRL, MRT, " + ((c.LRT || 0) + (c.LRTJ || 0)) + " lintas LRT, KA Bandara, dan Whoosh.</p></div>";
-    html += '<div class="info-card"><h3>Tentang Lumi</h3><p>Lumi Transport v2.3. Perencana rute bekerja offline di ponsel; internet hanya dipakai untuk peta, pencarian alamat, dan jarak jalan untuk estimasi ojol.</p></div>';
+    html += '<div class="info-card" id="aboutCard"><h3>Tentang Lumi</h3>' +
+      '<p><b>Lumi Transport</b> v' + esc(appVersion()) + '. Perencana rute bekerja offline di ponsel; internet hanya dipakai untuk peta, pencarian alamat, dan jarak jalan untuk estimasi ojol.</p>' +
+      '<p>Lisensi <a data-url="https://github.com/VAMvicky/LumiTransport/blob/main/LICENSE">GPL-3.0</a> · <a data-url="https://github.com/VAMvicky/LumiTransport">Repo GitHub</a></p>' +
+      '<p><button type="button" class="about-btn" id="btnUpdate">Cek update</button><button type="button" class="about-btn" id="btnReport">Laporkan masalah</button></p></div>';
     $("#infoBody").innerHTML = html;
+    var aboutUp = $("#btnUpdate"), aboutRep = $("#btnReport");
+    if (aboutUp) aboutUp.addEventListener("click", checkUpdate);
+    if (aboutRep) aboutRep.addEventListener("click", reportIssue);
     $$("#infoBody [data-url]").forEach(function (a) { a.addEventListener("click", function () { NATIVE ? NATIVE.openUrl(a.dataset.url) : window.open(a.dataset.url); }); });
+  }
+
+  /* ------------------------------------------------------- tentang, update, laporan */
+  function appVersion() {
+    try { if (NATIVE && NATIVE.versionName) { var v = NATIVE.versionName(); if (v && v !== "0") return v; } } catch (e) { }
+    return "2.1";
+  }
+  function openExt(url) { if (NATIVE && NATIVE.openUrl) NATIVE.openUrl(url); else window.open(url); }
+
+  function checkUpdate() {
+    var btn = $("#btnUpdate");
+    if (btn) { btn.disabled = true; btn.textContent = "Memeriksa…"; }
+    var done = function () { if (btn) { btn.disabled = false; btn.textContent = "Cek update"; } };
+    http("https://api.github.com/repos/VAMvicky/LumiTransport/releases/latest", 12000).then(function (r) {
+      var tag = (r && r.tag_name) || "";
+      var cur = "v" + appVersion();
+      if (!tag) { toast("Belum ada rilis untuk dibandingkan"); return; }
+      if (tag === cur) { toast("Lumi sudah versi terbaru (" + cur + ")"); return; }
+      toast("Versi baru tersedia: " + tag);
+      setTimeout(function () { openExt("https://github.com/VAMvicky/LumiTransport/releases/latest"); }, 900);
+    }).catch(function () { toast("Tidak bisa memeriksa update (offline?)"); }).then(done);
+  }
+
+  function reportIssue() {
+    var v = appVersion();
+    var body = "### Apa yang terjadi\n\n\n### Langkah mengulang\n1. \n2. \n\n### Lingkungan\n- Lumi Transport v" + v + "\n- " + (navigator.userAgent || "") + "\n";
+    openExt("https://github.com/VAMvicky/LumiTransport/issues/new?title=" + encodeURIComponent("[v" + v + "] ") + "&body=" + encodeURIComponent(body));
   }
 
   /* ------------------------------------------------------- pilih titik di peta */
@@ -2341,7 +2374,7 @@
         return '<option value="' + k + '"' + (k === cur ? " selected" : "") + ">" + esc(MAPSTYLES[k].name) + "</option>";
       }).join("") + "</select></label>" + (glOk() ? "" : '<p style="margin:6px 0 0">Perangkat ini tidak mendukung WebGL, jadi peta memakai OpenStreetMap standar.</p>') +
       st("map") + "</div>";
-    html += '<div class="set-card"><h3>Alamat lewat Google Maps</h3><p>Ketuk kolom <b>Dari</b> atau <b>Ke</b> → <b>Cari di Google Maps</b>. Pilih tempatnya di Google Maps, ketuk <b>Bagikan</b>, lalu pilih <b>Lumi Transport</b>. Lokasi otomatis terisi dan tersimpan di bawah ini.</p></div>';
+    html += '<div class="set-card"><h3>Mencari alamat</h3><p><b>Langsung di aplikasi:</b> ketik minimal 3 huruf di kolom <b>Dari</b> atau <b>Ke</b>; saran alamat muncul dari <b>OpenStreetMap</b>.</p><p><b>Kalau tidak ketemu:</b> ketuk <b>Cari di Google Maps</b>, pilih tempatnya, ketuk <b>Bagikan</b>, lalu pilih <b>Lumi Transport</b>. Lokasi otomatis terisi dan tersimpan di bawah ini.</p></div>';
     html += '<div class="set-card"><h3>Tempat tersimpan</h3><p>Tempat yang pernah kamu bagikan dari Google Maps. Muncul saat mengetik di kolom Dari/Ke.</p>' +
       (places.length ? places.map(function (pl, i) {
         return '<div class="place-row"><span class="sg-ico saved">' + ICO_STAR + '</span><div class="pm"><b>' + esc(pl.name) + "</b><span>" + esc(pl.sub || (pl.p[0].toFixed(5) + ", " + pl.p[1].toFixed(5))) + '</span></div><button data-del="' + i + '">Hapus</button></div>';
