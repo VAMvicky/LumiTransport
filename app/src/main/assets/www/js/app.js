@@ -281,7 +281,8 @@
   function accessCardHTML() {
     return '<div class="set-card"><h3>Aksesibilitas</h3>' +
       '<label class="set-field"><span>Mode aksesibel</span><input type="checkbox" id="setAccess"' + (cfg().accessible ? " checked" : "") + '></label>' +
-      '<p>Huruf lebih besar, tombol lebih tinggi, dan animasi dikurangi.</p></div>';
+      '<label class="set-field"><span>Panduan suara</span><input type="checkbox" id="setVoice"' + (cfg().voice ? " checked" : "") + '></label>' +
+      '<p>Huruf lebih besar, tombol lebih tinggi, dan animasi dikurangi. Panduan suara membacakan langkah saat pendampingan berjalan.</p></div>';
   }
 
   /* ------------------------------------------------------- cadangkan & pulihkan */
@@ -850,6 +851,7 @@
   }
   function stopGuide() {
     try { NATIVE && NATIVE.stopGuide && NATIVE.stopGuide(); } catch (e) { }
+    try { NATIVE && NATIVE.stopSpeak && NATIVE.stopSpeak(); } catch (e) { }
     S.guide = null; store("guide", null);
     dropPipMap();
     var g = $("#guide"); if (g) g.remove();
@@ -1131,6 +1133,10 @@
     return km2 == null ? null : Math.round(km2 * 1000);
   }
   function renderGuide(st) {
+    if (st && cfg().voice && (st.text || st.title)) {
+      var say = (st.title ? st.title + ". " : "") + (st.text || "");
+      if (say !== S._voice) { S._voice = say; try { if (NATIVE && NATIVE.speak) NATIVE.speak(say); } catch (e) { } }
+    }
     var g = $("#guide");
     if (!g) {
       g = document.createElement("div"); g.id = "guide"; g.className = "guide"; g.setAttribute("role", "status"); g.setAttribute("aria-live", "polite");
@@ -1214,7 +1220,7 @@
 
   /* ------------------------------------------------------- pengaturan */
   // Tidak ada layanan yang butuh API key: peta OpenFreeMap/OSM, alamat lewat Google Maps (Bagikan).
-  var DEFAULT_CFG = { basemap: "liberty", accessible: false, lang: ((navigator.language || "id").toLowerCase().indexOf("id") === 0 ? "id" : "en") };
+  var DEFAULT_CFG = { basemap: "liberty", accessible: false, voice: false, lang: ((navigator.language || "id").toLowerCase().indexOf("id") === 0 ? "id" : "en") };
   var MAPSTYLES_KEYS = { liberty: 1, bright: 1, positron: 1, osm: 1 };
   function cfg() {
     var c = store("cfg") || {};
@@ -2670,6 +2676,12 @@
     if (accBox) accBox.addEventListener("change", function () {
       var c = cfg(); c.accessible = this.checked; store("cfg", c); applyAccessible();
       renderSettings(["access", "ok", this.checked ? "Mode aksesibel aktif." : "Mode aksesibel dimatikan."]);
+    });
+    var voiceBox = $("#setVoice");
+    if (voiceBox) voiceBox.addEventListener("change", function () {
+      var c = cfg(); c.voice = this.checked; store("cfg", c);
+      if (!this.checked) { try { NATIVE && NATIVE.stopSpeak && NATIVE.stopSpeak(); } catch (e) { } }
+      renderSettings(["voice", "ok", this.checked ? "Panduan suara aktif." : "Panduan suara dimatikan."]);
     });
     var clearTrips = $("#btnClearTrips");
     if (clearTrips) clearTrips.addEventListener("click", function () { store("trips", []); renderSettings(["trips", "ok", "Riwayat perjalanan dihapus."]); });
