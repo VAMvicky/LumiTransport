@@ -268,6 +268,52 @@
       '<button class="btn-sec" id="btnClearTrips" type="button">Hapus riwayat</button></div>';
   }
 
+  /* ------------------------------------------------------- cadangkan & pulihkan */
+  var BACKUP_KEYS = ["cfg", "favs", "trips", "places", "recent", "onboarded", "guide"];
+  function backupText() {
+    var data = {};
+    BACKUP_KEYS.forEach(function (k) {
+      var v = store(k);
+      if (v !== null && v !== undefined) data[k] = v;
+    });
+    return JSON.stringify({ app: "LumiTransport", v: 1, ts: Date.now(), data: data });
+  }
+  function doBackup() {
+    var txt = backupText();
+    if (NATIVE && NATIVE.share) {
+      NATIVE.share("Lumi Transport — cadangan data\n\n" + txt);
+      toast("Cadangan dibagikan · simpan ke file atau catatan");
+    } else {
+      try { window.prompt("Salin cadangan ini:", txt); } catch (e) { }
+    }
+  }
+  function doRestore() {
+    var ta = $("#restoreText");
+    if (!ta) return;
+    var raw = (ta.value || "").trim();
+    var start = raw.indexOf("{");
+    if (start > 0) raw = raw.slice(start);
+    try {
+      var o = JSON.parse(raw);
+      if (!o || o.v !== 1 || !o.data) throw new Error("format");
+      var n = 0;
+      BACKUP_KEYS.forEach(function (k) {
+        if (o.data[k] !== undefined) { store(k, o.data[k]); n++; }
+      });
+      renderSettings(["backup", "ok", "Dipulihkan: " + n + " bagian data."]);
+      toast("Data dipulihkan");
+    } catch (e) {
+      toast("Teks cadangan tidak dikenali");
+    }
+  }
+  function backupCardHTML() {
+    return '<div class="set-card"><h3>Cadangkan &amp; pulihkan</h3>' +
+      '<p>Cadangan berisi pengaturan, rute favorit, riwayat perjalanan, dan tempat tersimpan.</p>' +
+      '<button class="btn-sec" id="btnBackup" type="button">Cadangkan (bagikan)</button>' +
+      '<textarea id="restoreText" class="restore-box" placeholder="Tempel teks cadangan di sini, lalu ketuk Pulihkan"></textarea>' +
+      '<button class="btn-sec" id="btnRestore" type="button">Pulihkan dari teks</button></div>';
+  }
+
   /* ------------------------------------------------------- rute favorit */
   function favs() { var f = store("favs"); return Array.isArray(f) ? f : []; }
   function saveFav() {
@@ -2472,7 +2518,11 @@
       }).join("") : '<p style="margin:0">Belum ada tempat tersimpan.</p>') + "</div>";
     html += historyCardHTML();
     html += favCardHTML();
+    html += backupCardHTML();
     $("#settingsBody").innerHTML = html;
+    var btnBackup = $("#btnBackup"), btnRestore = $("#btnRestore");
+    if (btnBackup) btnBackup.addEventListener("click", doBackup);
+    if (btnRestore) btnRestore.addEventListener("click", doRestore);
     var clearTrips = $("#btnClearTrips");
     if (clearTrips) clearTrips.addEventListener("click", function () { store("trips", []); renderSettings(["trips", "ok", "Riwayat perjalanan dihapus."]); });
     var saveFavBtn = $("#btnSaveFav");
