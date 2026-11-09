@@ -778,7 +778,7 @@
       });
     }
     if (l) html += '<div class="btn-row"><button class="btn-sec" id="chgOpenLine">Lihat rute ' + esc(l.code) + " di peta</button></div>";
-    var body = $("#chgBody"); body.innerHTML = html; body.scrollTop = 0;
+    var body = $("#chgBody"); body.innerHTML = tr(html); body.scrollTop = 0;
     $$(".chg-tabs button", body).forEach(function (t) {
       t.addEventListener("click", function () {
         $$(".chg-tabs button", body).forEach(function (o) { o.classList.toggle("is-on", o === t); });
@@ -1274,6 +1274,15 @@
      riwayat, favorit, cadangan). Penggantian berbasis frasa, jadi aman untuk
      HTML dan tidak menyentuh angka/nama tempat. */
   var TR = {
+    "Siap-siap turun": "Get ready to alight",
+    "Turun sekarang": "Alight now",
+    "Jalan kaki": "Walk",
+    "Berangkat": "Depart",
+    "Tiba": "Arrive",
+    "Naik": "Board",
+    "Turun": "Alight",
+    " mnt": " min",
+    "transit": "transfer",
     "Perubahan rute": "Route changes",
     "<h3>Peta</h3>": "<h3>Map</h3>",
     "Gaya peta": "Map style",
@@ -2004,7 +2013,7 @@
     html += "</div>";
     html += '<div class="btn-row"><button class="btn-sec" id="btnShare2">Bagikan rute (gambar)</button></div>';
     html += '<p class="disclaim">Jadwal tidak real-time. Cek pengumuman operator untuk gangguan atau perubahan rute.</p>';
-    var body = $("#tripBody"); body.innerHTML = html; body.scrollTop = 0;
+    var body = $("#tripBody"); body.innerHTML = tr(html); body.scrollTop = 0;
     if (!body.querySelector("#btnReportStop")) {
       var rb = document.createElement("button");
       rb.type = "button"; rb.id = "btnReportStop"; rb.className = "btn-sec";
@@ -2437,7 +2446,7 @@
         "</div></li>";
     });
     html += "</ol>";
-    var body = $("#lineBody"); body.innerHTML = html; body.scrollTop = 0;
+    var body = $("#lineBody"); body.innerHTML = tr(html); body.scrollTop = 0;
     $$(".stop", body).forEach(function (li) {
       li.addEventListener("click", function (e) {
         if (e.target.closest("button")) return;
