@@ -165,6 +165,61 @@ jobs:
           path: build/${{ steps.ver.outputs.apk }}
           if-no-files-found: error
 
+  gradle:
+    name: Gradle (R8 + shrinkResources)
+    runs-on: ubuntu-latest
+    # Sementara: job ini masih dalam migrasi, jadi kegagalannya belum memblokir PR.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle (cache)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Ambil kunci tanda tangan dari Secrets
+        env:
+          KS_B64: ${{ secrets.LUMI_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.LUMI_KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.LUMI_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KS_B64:-}" ] || [ -z "${KS_PASS:-}" ]; then
+            echo "::warning::Secrets LUMI_* belum diisi; APK Gradle ditandatangani kunci debug."
+            exit 0
+          fi
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/lumi.keystore"
+          {
+            echo "KEYSTORE=$RUNNER_TEMP/lumi.keystore"
+            echo "KS_PASS=$KS_PASS"
+            echo "KS_ALIAS=${KS_ALIAS:-lumi}"
+          } >> "$GITHUB_ENV"
+
+      - name: Build release (R8 + shrinkResources)
+        run: |
+          set -o pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace assembleRelease 2>&1 | tee gradle-build.log
+
+      - name: Ukuran APK Gradle
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          BYTES=$(stat -c%s "$APK")
+          echo "APK Gradle: $APK — $BYTES byte ($(( BYTES / 1024 )) KB)" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload artifact Gradle
+        uses: actions/upload-artifact@v4
+        with:
+          name: LumiTransport-gradle
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
   release:
     name: Rilis dari tag
     # Hanya tag v* yang membuat rilis. Tag tidak pernah dipindahkan.
