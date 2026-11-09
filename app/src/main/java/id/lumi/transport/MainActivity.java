@@ -735,7 +735,6 @@ public class MainActivity extends Activity {
             catch (Exception e) { return "0"; }
         }
 
-        @JavascriptInterface
         /** Panduan suara: ucapkan teks pendampingan. */
         @JavascriptInterface
         public void speak(final String text) { LumiTts.speak(MainActivity.this, text); }
@@ -743,6 +742,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void stopSpeak() { LumiTts.stop(); }
 
+        @JavascriptInterface
         public void openUrl(final String url) {
             main.post(new Runnable() { @Override public void run() { openExternal(url); }});
         }
