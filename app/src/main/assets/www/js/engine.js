@@ -1,5 +1,5 @@
 /*
- * Lumi Transportation — mesin perencana rute multimoda (offline).
+ * Lumi Transport — mesin perencana rute multimoda (offline).
  * Bekerja di browser/WebView dan Node (untuk pengujian).
  *
  * Model:

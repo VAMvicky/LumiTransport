@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# Build APK Lumi Transportation tanpa Gradle (javac + d8 + aapt2 + apksigner).
+# Build APK Lumi Transport tanpa Gradle (javac + d8 + aapt2 + apksigner).
+#
+# Versi diambil dari satu sumber: release-notes/CURRENT (mis. "2.0").
+# versionCode deterministik: 2.0 -> 20000, 2.1 -> 20100, 2.1.1 -> 20101.
 #
 # Kebutuhan (variabel lingkungan, atau taruh di folder tools/sdk):
 #   ANDROID_JAR  : android.jar platform API 34
@@ -21,8 +24,24 @@ APKSIGNER_JAR=${APKSIGNER_JAR:-$SDK/apksigner.jar}
 KEYSTORE=${KEYSTORE:-lumi-release.keystore}
 KS_PASS=${KS_PASS:-lumi123}
 KS_ALIAS=${KS_ALIAS:-lumi}
+MIN_SDK=26
+TARGET_SDK=34
 OUT=build
 APP=app/src/main
+
+VER=$(tr -d ' \r\n' < release-notes/CURRENT)
+VER=${VER#v}
+MAJ=${VER%%.*}
+REST=${VER#*.}
+if [ "$REST" = "$VER" ]; then
+  MIN=0; PAT=0
+else
+  MIN=${REST%%.*}
+  if [ "$REST" = "$MIN" ]; then PAT=0; else PAT=${REST#*.}; fi
+fi
+CODE=$(( MAJ * 10000 + MIN * 100 + PAT ))
+APK_NAME="LumiTransport-v$VER.apk"
+echo "versi: $VER (versionCode $CODE, minSdk $MIN_SDK)"
 
 rm -rf "$OUT" && mkdir -p "$OUT"/{res,classes,dex,gen}
 
@@ -33,8 +52,8 @@ echo "2/6 kompilasi resource"
 "$AAPT2" compile --dir "$APP/res" -o "$OUT/res/res.zip"
 "$AAPT2" link -o "$OUT/base.apk" -I "$ANDROID_JAR" \
   --manifest "$APP/AndroidManifest.xml" -A "$APP/assets" \
-  --java "$OUT/gen" --min-sdk-version 24 --target-sdk-version 34 \
-  --version-code 39 --version-name 2.3 -0 woff2 "$OUT/res/res.zip"
+  --java "$OUT/gen" --min-sdk-version "$MIN_SDK" --target-sdk-version "$TARGET_SDK" \
+  --version-code "$CODE" --version-name "$VER" -0 woff2 "$OUT/res/res.zip"
 
 echo "3/6 kompilasi Java (ecj)"
 ECJ_JAR=${ECJ_JAR:-$SDK/ecj.jar}
@@ -43,7 +62,7 @@ java -jar "$ECJ_JAR" -8 -nowarn -encoding UTF-8 -bootclasspath "$ANDROID_JAR" \
 test -f "$OUT/classes/id/lumi/transport/MainActivity.class"
 
 echo "4/6 d8 (dex)"
-java -cp "$D8_JAR" com.android.tools.r8.D8 --release --min-api 24 --lib "$ANDROID_JAR" \
+java -cp "$D8_JAR" com.android.tools.r8.D8 --release --min-api "$MIN_SDK" --lib "$ANDROID_JAR" \
   --output "$OUT/dex" $(find "$OUT/classes" -name '*.class')
 
 echo "5/6 kemas + zipalign"
@@ -54,9 +73,9 @@ python3 tools/zipalign.py "$OUT/unaligned.apk" "$OUT/aligned.apk"
 echo "6/6 tanda tangan"
 if [ ! -f "$KEYSTORE" ]; then
   keytool -genkeypair -keystore "$KEYSTORE" -alias "$KS_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
-    -storepass "$KS_PASS" -keypass "$KS_PASS" -dname "CN=Lumi Transportation, O=Lumi, C=ID" >/dev/null 2>&1
+    -storepass "$KS_PASS" -keypass "$KS_PASS" -dname "CN=Lumi Transport, O=Lumi, C=ID" >/dev/null 2>&1
 fi
 java -jar "$APKSIGNER_JAR" sign --ks "$KEYSTORE" --ks-pass "pass:$KS_PASS" --key-pass "pass:$KS_PASS" \
-  --ks-key-alias "$KS_ALIAS" --min-sdk-version 24 --out "$OUT/LumiTransportation.apk" "$OUT/aligned.apk"
-java -jar "$APKSIGNER_JAR" verify --verbose "$OUT/LumiTransportation.apk" | head -5
-ls -la "$OUT/LumiTransportation.apk"
+  --ks-key-alias "$KS_ALIAS" --min-sdk-version "$MIN_SDK" --out "$OUT/$APK_NAME" "$OUT/aligned.apk"
+java -jar "$APKSIGNER_JAR" verify --verbose "$OUT/$APK_NAME" | head -5
+ls -la "$OUT/$APK_NAME"
