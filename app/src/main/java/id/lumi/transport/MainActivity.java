@@ -42,7 +42,8 @@ import java.util.concurrent.Executors;
  */
 public class MainActivity extends Activity {
     private static final int REQ_LOCATION = 41, REQ_GUIDE = 42, REQ_NOTIF = 43, REQ_PERM = 44;
-    private static final String UA = "LumiTransportation/1.2 (Android)";
+    /** User-Agent tunggal untuk semua permintaan; diisi dari versionName di onCreate. */
+    private static String UA = "LumiTransport/2.0 (Android)";
 
     private WebView web;
     private android.widget.FrameLayout root;
@@ -89,11 +90,14 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
-        // Identitas aplikasi untuk server peta (aturan pemakaian ubin OpenStreetMap meminta User-Agent yang jelas).
-        s.setUserAgentString(s.getUserAgentString() + " LumiTransportation/2.4 (Android)");
+        // Identitas aplikasi untuk server peta: satu UA, diambil dari versionName.
+        try {
+            String v = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            if (v != null && !v.isEmpty()) UA = "LumiTransport/" + v + " (Android)";
+        } catch (Exception ignored) { }
+        s.setUserAgentString(s.getUserAgentString() + " " + UA);
         s.setDatabaseEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(true);
-        s.setUserAgentString(s.getUserAgentString() + " LumiTransportation/1.0");
         web.addJavascriptInterface(new Bridge(), "LumiNative");
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
