@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="docs/logo.png" width="112" alt="Logo Lumi Transportation">
+<img src="docs/logo.png" width="112" alt="Logo Lumi Transport">
 
-# ✦ Lumi Transportation ✦
+# ✦ Lumi Transport ✦
 
 ### Perencana perjalanan semua moda Jabodetabek untuk Android
 
@@ -22,7 +22,7 @@
 
 ---
 
-## 🌟 Kenapa Lumi Transportation?
+## 🌟 Kenapa Lumi Transport?
 
 > Masukkan **asal** dan **tujuan**, lalu Lumi menghitung **semua kombinasi angkutan umum** yang masuk akal (bus, mikrotrans, kereta, sampai ojol), lengkap dengan **waktu, tarif, dan tempat turun**. Saat berangkat, Lumi **mendampingimu lewat GPS** dan mengingatkan saat harus turun.
 
@@ -30,7 +30,7 @@
 |---|---|
 | 🗺️ **Semua kombinasi rute** | 9 dan 9A muncul sebagai opsi sendiri, begitu juga JAK36 → LRT, 9C → Makasar → JAK108, dan lainnya. Bukan cuma satu jawaban. |
 | 🎯 **Filter yang kamu mau** | Urutkan Tercepat, Termurah, atau Minim transit, lalu pilih moda: hanya yang **mengandung TJ**, atau TJ + LRT, dan seterusnya. |
-| 🚌 **Posisi bus di aplikasi TJ** | Di setiap ruas Transjakarta, Mikrotrans, dan Royaltrans ada tombol **Lihat posisi bus di aplikasi TJ**: langsung membuka aplikasi resmi TJ, atau Play Store bila belum terpasang. |
+| 🚌 **Posisi bus langsung** | **Bus di sekitarmu** menampilkan posisi Transjakarta, Mikrotrans, Royaltrans, dan Transjabodetabek saat ini di peta. Di detail perjalanan ada perkiraan **bus berikutnya tiba di halte naik**, dan di detail rute ada semua bus rute itu. |
 | 🧭 **Pendampingan GPS** | Tahu posisimu di peta, **sisa pemberhentian**, dan HP bergetar saat **"Siap-siap turun"** dan **"Turun sekarang"**, juga saat layar mati. |
 | 🔔 **Tahu kalau rute berubah** | Data resmi Transjakarta **dicek tiap jam**. Begitu ada rute baru, rute dihapus, atau halte berubah, kamu dapat **notifikasi**. |
 | 🖼️ **Bagikan sebagai gambar** | Setiap rute bisa dibagikan sebagai **gambar rapi** ke WhatsApp, IG, atau mana saja. |
@@ -80,7 +80,11 @@
 - Kombinasi **ojol + kereta** dan ojol motor/mobil langsung, dengan jarak jalan dari OSRM
 
 **🚌 Posisi bus**
-- Server armada Transjakarta hanya melayani aplikasi resminya, jadi Lumi tidak menampilkan posisi bus sendiri. Di setiap ruas bus ada tombol **Lihat posisi bus di aplikasi TJ** yang membuka aplikasi TJ, atau Play Store bila belum terpasang
+- **Langsung di dalam Lumi**, dari feed armada Transjakarta: layar **Bus di sekitarmu** (bus terdekat beserta jarak, halte berikutnya, dan perkiraan tiba), **bus berikutnya di halte naik** pada detail perjalanan, dan **semua bus satu rute** di detail rute
+- **Notifikasi "bus makin dekat"**: saat detail perjalanan terbuka, Lumi memberi tahu ketika bus berikutnya tinggal **±10, ±5, ±2 menit**, lalu saat **sudah tiba** di halte naikmu (sekali per bus)
+- ETA per halte diambil presisi: ID halte naik/turun dicari sekali dari REST TJ, lalu ETA dibaca dari data bus itu sendiri
+- Posisi diperbarui tiap beberapa detik lewat koneksi native (WebSocket + MQTT) dan hanya rute yang sedang dilihat yang diunduh, jadi kuota tetap hemat
+- Bila feed sedang tidak bisa dihubungi (mis. di luar jam operasi), Lumi menjelaskan sebabnya dan menyediakan tombol **Buka aplikasi TJ**
 
 **🧭 Pendampingan GPS**
 - Peta hanya menampilkan sisa perjalanan: garis dan halte yang sudah dilewati menghilang; langkah pertama dimulai dari posisimu sekarang
@@ -113,7 +117,7 @@
 - Gambar PNG berisi asal → tujuan, total waktu & tarif, strip moda, serta langkah per langkah (jam naik, arah, tempat turun, tarif)
 
 **📍 Alamat lewat Google Maps**
-- Ketuk kolom Dari/Ke → **Cari di Google Maps** → pilih tempat → **Bagikan → Lumi Transportation**
+- Ketuk kolom Dari/Ke → **Cari di Google Maps** → pilih tempat → **Bagikan → Lumi Transport**
 - Koordinat **tempat** dibaca dari tautan (bukan posisi peta), dengan tiga cara berjalan bersamaan dan hasil disimpan di HP agar instan saat dipakai lagi
 - **Tempat tersimpan**, **Lokasi saya**, dan pilih titik di peta
 
@@ -172,7 +176,7 @@ Diperbarui **29 Oktober 2026**. Tarif adalah perkiraan; selalu cek pengumuman op
 ## ⬇️ Unduh & Pasang
 
 1. Buka halaman **[Releases](https://github.com/VAMvicky/LumiTransport/releases/latest)**.
-2. Di bagian **Assets**, unduh `LumiTransportation-v2.3.apk`.
+2. Di bagian **Assets**, unduh `LumiTransport-v2.0.apk`.
 3. Buka file yang sudah diunduh. Kalau Android meminta, izinkan **"Instal aplikasi tidak dikenal"** untuk browser atau pengelola file yang kamu pakai.
 4. Tekan **Instal**. Selesai! 🎉
 
@@ -196,7 +200,7 @@ Lumi menampilkan dua layar singkat, masing-masing **pas dalam satu layar tanpa s
 Setelah itu Lumi mengunduh data rute resmi Transjakarta di latar belakang (butuh internet sekali).
 
 ### 1️⃣ Isi asal & tujuan
-Ketuk **Dari** atau **Ke** → **Cari di Google Maps** → pilih tempatnya → **Bagikan** → **Lumi Transportation**. Kolom terisi otomatis dan tempat itu tersimpan. Bisa juga **Lokasi saya** atau tempat tersimpan.
+Ketuk **Dari** atau **Ke** → **Cari di Google Maps** → pilih tempatnya → **Bagikan** → **Lumi Transport**. Kolom terisi otomatis dan tempat itu tersimpan. Bisa juga **Lokasi saya** atau tempat tersimpan.
 
 ### 2️⃣ Pilih jam & cari rute
 Ketuk jam untuk **Berangkat jam** atau **Tiba sebelum**, lalu **Cari rute**.
@@ -214,7 +218,7 @@ Ketuk **Bagikan rute** di kartu hasil atau di detail perjalanan, lalu pilih What
 Saat ada perubahan, notifikasi muncul. Ketuk untuk melihat daftarnya, atau buka **Pengaturan → Perubahan rute**. Tombol **Lihat rute** membuka halte terbaru rute itu.
 
 ### 7️⃣ Lihat posisi bus 🚌
-Di detail perjalanan, ketuk **Lihat posisi bus … di aplikasi TJ** pada ruas Transjakarta/Mikrotrans/Royaltrans. Lumi membuka aplikasi resmi TJ, atau Play Store bila belum terpasang.
+Ketuk kartu **Bus di sekitarmu** di beranda untuk melihat semua bus Transjakarta/Mikrotrans/Royaltrans di sekitarmu (jarak, halte berikutnya, perkiraan tiba). Di detail perjalanan, tiap ruas bus menampilkan **bus berikutnya tiba di halte naik**; di detail rute, semua bus rute itu tampil di peta. Bila feed armada tidak bisa dihubungi, Lumi menawarkan tombol **Buka aplikasi TJ**.
 
 ### 8️⃣ Info rute
 Tab **Rute**: cari kode atau nama rute, pilih arah/varian, ketuk halte untuk menjadikannya asal atau tujuan.
@@ -226,7 +230,7 @@ Tab **Rute**: cari kode atau nama rute, pilih arah/varian, ketuk halte untuk men
 <details>
 <summary><b>Notifikasi pendampingan atau perubahan rute tidak muncul</b></summary>
 
-Pastikan izin notifikasi aktif dan **Berjalan di latar belakang** sudah diizinkan (Pengaturan HP → Aplikasi → Lumi Transportation → Baterai → Tidak dibatasi). Di HP Xiaomi, Oppo, Vivo, Realme, dan Infinix aktifkan juga **Mulai otomatis**.
+Pastikan izin notifikasi aktif dan **Berjalan di latar belakang** sudah diizinkan (Pengaturan HP → Aplikasi → Lumi Transport → Baterai → Tidak dibatasi). Di HP Xiaomi, Oppo, Vivo, Realme, dan Infinix aktifkan juga **Mulai otomatis**.
 </details>
 
 <details>
@@ -318,7 +322,7 @@ export AAPT2=$ANDROID_HOME/build-tools/34.0.0/aapt2
 export D8_JAR=$ANDROID_HOME/build-tools/34.0.0/lib/d8.jar
 export APKSIGNER_JAR=$ANDROID_HOME/build-tools/34.0.0/lib/apksigner.jar
 export ECJ_JAR=/path/ke/ecj.jar          # org.eclipse.jdt:ecj
-./build.sh                                # hasil: build/LumiTransportation.apk
+./build.sh                                # hasil: build/LumiTransport-v2.0.apk
 node tools/test_engine.js                 # uji mesin rute
 ```
 Folder ini juga punya `build.gradle` bila ingin membuka di Android Studio.
@@ -332,7 +336,7 @@ Workflow [`route-watch.yml`](.github/workflows/route-watch.yml) berjalan tiap ja
 
 ## 🙏 Terima Kasih
 
-Lumi Transportation bisa berdiri berkat data terbuka, proyek open-source, dan layanan berikut. **Terima kasih banyak** untuk para pembuat dan kontributornya! 💖
+Lumi Transport bisa berdiri berkat data terbuka, proyek open-source, dan layanan berikut. **Terima kasih banyak** untuk para pembuat dan kontributornya! 💖
 
 ### 🚌 Data transportasi
 | Sumber | Yang dipakai Lumi |
@@ -351,13 +355,13 @@ Lumi Transportation bisa berdiri berkat data terbuka, proyek open-source, dan la
 ### 📚 Library & aset
 [Leaflet](https://github.com/Leaflet/Leaflet) oleh Volodymyr Agafonkin dkk. · [Plus Jakarta Sans](https://github.com/tokotype/PlusJakartaSans) oleh Tokotype (SIL OFL) · [Eclipse JDT ecj](https://github.com/eclipse-jdt/eclipse.jdt.core) · Android build tools (aapt2, d8, apksigner)
 
-> Proyek, data, dan layanan di atas tidak berafiliasi dengan Lumi Transportation. Seluruh penghargaan atas karya mereka menjadi milik pembuatnya masing-masing.
+> Proyek, data, dan layanan di atas tidak berafiliasi dengan Lumi Transport. Seluruh penghargaan atas karya mereka menjadi milik pembuatnya masing-masing.
 
 ---
 
 ## ⚖️ Penafian
 
-Lumi Transportation adalah proyek independen untuk **penggunaan pribadi dan edukasi**.
+Lumi Transport adalah proyek independen untuk **penggunaan pribadi dan edukasi**.
 Lumi **tidak berafiliasi dengan, didukung oleh, atau disponsori oleh** PT Transportasi Jakarta, PT KAI / KAI Commuter, PT MRT Jakarta, PT LRT Jakarta, KCIC, Gojek, Grab, maupun Google. Semua merek dagang adalah milik pemiliknya masing-masing.
 Waktu tempuh dan tarif adalah **perkiraan**. Selalu cek pengumuman operator untuk gangguan atau perubahan layanan.
 
@@ -365,10 +369,10 @@ Waktu tempuh dan tarif adalah **perkiraan**. Selalu cek pengumuman operator untu
 
 Hak cipta © 2026 **VAMvicky**.
 
-Lumi Transportation adalah perangkat lunak bebas dan open source, dirilis di bawah **[GNU General Public License v3.0](LICENSE)**.
-Kamu boleh memakai, mempelajari, mengubah, dan membagikan ulang Lumi Transportation, dengan syarat versi turunannya juga dirilis dengan lisensi yang sama (GPL-3.0) dan kode sumbernya tetap terbuka.
+Lumi Transport adalah perangkat lunak bebas dan open source, dirilis di bawah **[GNU General Public License v3.0](LICENSE)**.
+Kamu boleh memakai, mempelajari, mengubah, dan membagikan ulang Lumi Transport, dengan syarat versi turunannya juga dirilis dengan lisensi yang sama (GPL-3.0) dan kode sumbernya tetap terbuka.
 Leaflet (BSD-2-Clause) dan Plus Jakarta Sans (SIL OFL 1.1) tetap memakai lisensi masing-masing.
-Lumi Transportation diberikan **tanpa jaminan apa pun**. Lihat file [LICENSE](LICENSE) untuk teks lengkapnya (berbahasa Inggris).
+Lumi Transport diberikan **tanpa jaminan apa pun**. Lihat file [LICENSE](LICENSE) untuk teks lengkapnya (berbahasa Inggris).
 
 <div align="center">
 

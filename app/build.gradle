@@ -2,16 +2,29 @@ plugins {
     id "com.android.application"
 }
 
+// Satu sumber versi: release-notes/CURRENT (mis. "2.0", "2.1", "2.1.1").
+// versionCode deterministik: 2.0 -> 20000, 2.1 -> 20100, 2.1.1 -> 20101.
+def currentVersion = { ->
+    new File(rootProject.projectDir, "release-notes/CURRENT").text.trim().replaceFirst("^v", "")
+}
+def versionCodeOf = { ->
+    def p = currentVersion().split("\\.")
+    int major = p.length > 0 ? (p[0] as int) : 0
+    int minor = p.length > 1 ? (p[1] as int) : 0
+    int patch = p.length > 2 ? (p[2] as int) : 0
+    return major * 10000 + minor * 100 + patch
+}
+
 android {
     namespace "id.lumi.transport"
     compileSdk 34
 
     defaultConfig {
         applicationId "id.lumi.transport"
-        minSdk 24
+        minSdk 26
         targetSdk 34
-        versionCode 39
-        versionName "2.3"
+        versionCode versionCodeOf()
+        versionName currentVersion()
     }
 
     buildTypes {

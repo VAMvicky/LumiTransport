@@ -1,23 +1,32 @@
-name: Build Lumi Transportation
+name: CI Lumi Transport
 
+# Aturan rilis:
+#  - push ke branch dan pull request HANYA menghasilkan artifact (APK + laporan ukuran).
+#  - rilis dibuat HANYA dari tag baru `v<versi>` yang tidak pernah dipindahkan.
 on:
   push:
-    branches: [ main ]
-    paths:
-      - "app/**"
-      - "tools/**"
-      - "data-raw/**"
-      - "build.sh"
-      - "release-notes/**"
-      - ".github/workflows/build.yml"
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: write
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
+    name: Build + test
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      code: ${{ steps.ver.outputs.code }}
+      apk: ${{ steps.ver.outputs.apk }}
+      size: ${{ steps.size.outputs.bytes }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,16 +36,36 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Baca versi dari release-notes/CURRENT
+        id: ver
+        run: |
+          set -euo pipefail
+          V=$(tr -d ' \r\n' < release-notes/CURRENT)
+          V=${V#v}
+          if ! [[ "$V" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
+            echo "::error::release-notes/CURRENT tidak valid: '$V' (harus 2.0 / 2.1 / 2.1.1)"
+            exit 1
+          fi
+          MAJ=${V%%.*}; REST=${V#*.}
+          if [ "$REST" = "$V" ]; then MIN=0; PAT=0; else
+            MIN=${REST%%.*}
+            if [ "$REST" = "$MIN" ]; then PAT=0; else PAT=${REST#*.}; fi
+          fi
+          CODE=$(( MAJ * 10000 + MIN * 100 + PAT ))
+          echo "version=$V"  >> "$GITHUB_OUTPUT"
+          echo "code=$CODE"  >> "$GITHUB_OUTPUT"
+          echo "apk=LumiTransport-v$V.apk" >> "$GITHUB_OUTPUT"
+          echo "versi $V (versionCode $CODE), APK: LumiTransport-v$V.apk"
+
       - name: Siapkan alat build Android (tanpa Gradle)
         run: |
-          set -e
+          set -euo pipefail
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           PLAT="$ANDROID_HOME/platforms/android-34"
           if [ ! -f "$PLAT/android.jar" ]; then
             yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" >/dev/null
           fi
           mkdir -p tools/sdk
-          curl -sSL -o tools/sdk/ecj.jar https://repo1.maven.org/maven2/org/eclipse/jdt/ecj/3.33.0/ecj-3.33.0.jar
           {
             echo "ANDROID_JAR=$PLAT/android.jar"
             echo "AAPT2=$BT/aapt2"
@@ -44,7 +73,20 @@ jobs:
             echo "APKSIGNER_JAR=$BT/lib/apksigner.jar"
             echo "ECJ_JAR=$PWD/tools/sdk/ecj.jar"
           } >> "$GITHUB_ENV"
-          echo "build-tools: $BT"
+
+      - name: Cache ecj
+        uses: actions/cache@v4
+        with:
+          path: tools/sdk/ecj.jar
+          key: ecj-3.33.0
+
+      - name: Unduh ecj (jika belum ada di cache)
+        run: |
+          set -euo pipefail
+          if [ ! -f tools/sdk/ecj.jar ]; then
+            curl -sSL -o tools/sdk/ecj.jar https://repo1.maven.org/maven2/org/eclipse/jdt/ecj/3.33.0/ecj-3.33.0.jar
+          fi
+          sha256sum tools/sdk/ecj.jar | tee ecj.sha256
 
       - name: Ambil kunci tanda tangan dari Secrets
         id: key
@@ -52,11 +94,13 @@ jobs:
           KS_B64: ${{ secrets.LUMI_KEYSTORE_BASE64 }}
           KS_PASS: ${{ secrets.LUMI_KEYSTORE_PASSWORD }}
           KS_ALIAS: ${{ secrets.LUMI_KEY_ALIAS }}
+          KS_KEYPASS: ${{ secrets.LUMI_KEY_PASSWORD }}
         run: |
-          if [ -z "$KS_B64" ] || [ -z "$KS_PASS" ]; then
-            echo "::warning::Secrets LUMI_KEYSTORE_BASE64 / LUMI_KEYSTORE_PASSWORD belum diisi. APK ditandatangani kunci sementara dan TIDAK dirilis."
-            echo "signed=false" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          if [ -z "${KS_B64:-}" ] || [ -z "${KS_PASS:-}" ]; then
+            echo "::warning::Secrets LUMI_KEYSTORE_BASE64 / LUMI_KEYSTORE_PASSWORD belum diisi; APK ditandatangani kunci sementara."
             echo "KEYSTORE=$RUNNER_TEMP/temp.keystore" >> "$GITHUB_ENV"
+            echo "signed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/lumi.keystore"
@@ -71,39 +115,96 @@ jobs:
           chmod +x build.sh
           ./build.sh 2>&1 | tee build.log
 
-      - name: Uji mesin rute
-        run: node tools/test_engine.js > /dev/null
-
-      - name: Baca versi
-        id: ver
-        run: echo "tag=$(tr -d ' \r\n' < release-notes/CURRENT)" >> "$GITHUB_OUTPUT"
-
-      - name: Ganti nama APK
+      - name: Uji mesin rute (gagal = build merah)
         run: |
-          mkdir -p out
-          cp build/LumiTransportation.apk "out/LumiTransportation-${{ steps.ver.outputs.tag }}.apk"
+          set -euo pipefail
+          node tools/test_engine.js
+
+      - name: Verifikasi identitas APK
+        run: |
+          set -euo pipefail
+          APK="build/${{ steps.ver.outputs.apk }}"
+          BADGING=$("$AAPT2" dump badging "$APK")
+          echo "$BADGING" | head -5
+          echo "$BADGING" | grep -q "package: name='id.lumi.transport'" || { echo "::error::applicationId salah"; exit 1; }
+          echo "$BADGING" | grep -q "versionCode='${{ steps.ver.outputs.code }}'" || { echo "::error::versionCode tidak sesuai release-notes/CURRENT"; exit 1; }
+          echo "$BADGING" | grep -q "versionName='${{ steps.ver.outputs.version }}'" || { echo "::error::versionName tidak sesuai release-notes/CURRENT"; exit 1; }
+          echo "$BADGING" | grep -qi "application-label:'Lumi Transport'" || { echo "::error::nama aplikasi bukan 'Lumi Transport'"; exit 1; }
+
+      - name: Ukuran APK
+        id: size
+        run: |
+          set -euo pipefail
+          APK="build/${{ steps.ver.outputs.apk }}"
+          BYTES=$(stat -c%s "$APK")
+          echo "bytes=$BYTES" >> "$GITHUB_OUTPUT"
+          echo "APK: $APK — $BYTES byte ($(( BYTES / 1024 )) KB)" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "$APK" > apk-path.txt
+
+      - name: Bandingkan ukuran dengan rilis terakhir
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          PREV=$(gh api "repos/${{ github.repository }}/releases/latest" --jq '.assets[0].size' 2>/dev/null || echo "")
+          NOW=${{ steps.size.outputs.bytes }}
+          if [ -n "$PREV" ] && [ "$PREV" != "null" ]; then
+            DELTA=$(( NOW - PREV ))
+            PCT=$(( DELTA * 1000 / PREV ))
+            printf 'Ukuran APK: %d byte → %d byte (%+d byte, %+d.%d%%)\n' "$PREV" "$NOW" "$DELTA" $(( PCT / 10 )) $(( PCT % 10 )) | tee size-report.txt
+          else
+            printf 'Ukuran APK: %d byte (belum ada rilis pembanding)\n' "$NOW" | tee size-report.txt
+          fi
+          cat size-report.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Komentari ukuran di PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file size-report.txt || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LumiTransportation-apk
-          path: out/*.apk
+          name: LumiTransport-${{ steps.ver.outputs.version }}
+          path: build/${{ steps.ver.outputs.apk }}
+          if-no-files-found: error
 
-      # Satu rilis per versi (release-notes/CURRENT). Push berikutnya memperbarui APK di rilis itu.
-      - name: Pindahkan tag versi ke commit ini
-        if: github.ref == 'refs/heads/main' && steps.key.outputs.signed == 'true'
+  release:
+    name: Rilis dari tag
+    # Hanya tag v* yang membuat rilis. Tag tidak pernah dipindahkan.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pastikan tag cocok dengan release-notes/CURRENT
         run: |
-          git tag -f "${{ steps.ver.outputs.tag }}" "${{ github.sha }}"
-          git push -f origin "refs/tags/${{ steps.ver.outputs.tag }}"
+          set -euo pipefail
+          V=$(tr -d ' \r\n' < release-notes/CURRENT); V=${V#v}
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$V" != "$TAG" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME tidak cocok dengan release-notes/CURRENT ($V). Naikkan CURRENT lewat PR dulu."
+            exit 1
+          fi
+
+      - name: Unduh APK hasil build
+        uses: actions/download-artifact@v4
+        with:
+          name: LumiTransport-${{ needs.build.outputs.version }}
+          path: out
 
       - name: Terbitkan rilis
-        if: github.ref == 'refs/heads/main' && steps.key.outputs.signed == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.ver.outputs.tag }}
-          target_commitish: ${{ github.sha }}
-          name: "✦ Lumi Transportation ${{ steps.ver.outputs.tag }}"
-          body_path: release-notes/${{ steps.ver.outputs.tag }}.md
-          files: out/*.apk
-          overwrite_files: true
+          tag_name: ${{ github.ref_name }}
+          name: "✦ Lumi Transport ${{ github.ref_name }}"
+          body_path: release-notes/${{ github.ref_name }}.md
+          files: out/${{ needs.build.outputs.apk }}
+          draft: false
+          prerelease: false
           make_latest: "true"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Lumi Transportation — data builder.
+Lumi Transport — data builder.
 
 Menggabungkan sumber data mentah di folder data-raw/ menjadi satu file
 app/src/main/assets/www/js/data.js yang dipakai aplikasi secara offline.
