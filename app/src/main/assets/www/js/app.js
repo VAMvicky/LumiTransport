@@ -230,6 +230,44 @@
   window.lumiToast = toast;
   function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem("lumi:" + k)); localStorage.setItem("lumi:" + k, JSON.stringify(v)); } catch (e) { return null; } }
 
+  /* ------------------------------------------------------- riwayat perjalanan */
+  function trips() { var t = store("trips"); return Array.isArray(t) ? t : []; }
+  function recordTrip(it) {
+    try {
+      if (!S.from || !S.to || !it) return;
+      var now = Date.now();
+      var list = trips();
+      var key = (S.from.name || "") + "|" + (S.to.name || "") + "|" + (it.min || 0);
+      // Panduan yang dihentikan lalu dimulai lagi dalam 2 menit tidak dihitung dua kali.
+      if (list[0] && list[0].key === key && now - list[0].ts < 120000) return;
+      var modes = [], seen = {};
+      (it.legs || []).forEach(function (l) {
+        if (l.type === "ride" && l.line && !seen[l.line.mode]) { seen[l.line.mode] = 1; modes.push(MODES[l.line.mode] ? MODES[l.line.mode].label : l.line.mode); }
+      });
+      list.unshift({ key: key, ts: now, from: S.from.name || "", to: S.to.name || "", mins: it.min || 0, fare: it.fareLo || 0, modes: modes.join(" + ") });
+      store("trips", list.slice(0, 50));
+    } catch (e) { }
+  }
+  function historyCardHTML() {
+    var list = trips();
+    if (!list.length) {
+      return '<div class="set-card"><h3>Riwayat perjalanan</h3><p>Belum ada perjalanan. Begitu kamu memulai pendampingan pada sebuah rute, perjalanan itu tercatat di sini beserta ongkosnya.</p></div>';
+    }
+    var m0 = new Date(); m0.setDate(1); m0.setHours(0, 0, 0, 0);
+    var total = 0, n = 0;
+    list.forEach(function (t) { if ((t.ts || 0) >= m0.getTime()) { total += t.fare || 0; n++; } });
+    var rows = list.slice(0, 12).map(function (t) {
+      var d = new Date(t.ts || 0);
+      var tanggal = d.getDate() + "/" + (d.getMonth() + 1) + "/" + String(d.getFullYear()).slice(2);
+      return '<div class="hist-row"><div class="hist-main"><b>' + esc(t.from) + " → " + esc(t.to) + "</b><span>" + tanggal +
+        (t.modes ? " · " + esc(t.modes) : "") + (t.mins ? " · " + t.mins + " mnt" : "") + '</span></div><div class="hist-fare">' + rp(t.fare || 0) + "</div></div>";
+    }).join("");
+    return '<div class="set-card"><h3>Riwayat perjalanan</h3>' +
+      "<p><b>" + n + " perjalanan bulan ini</b> · total <b>" + rp(total) + "</b></p>" +
+      '<div class="hist-list">' + rows + "</div>" +
+      '<button class="btn-sec" id="btnClearTrips" type="button">Hapus riwayat</button></div>';
+  }
+
   /* ------------------------------------------------------- jembatan native */
   var httpCb = {}, httpSeq = 0;
   window.__lumiHttp = function (id, status, body) { var cb = httpCb[id]; delete httpCb[id]; if (cb) cb(status, body); };
@@ -709,6 +747,7 @@
     S.guide = { it: it, title: S.from.name + " → " + S.to.name, names: spec.split("\n").map(function (r) { return r.split("\t")[4]; }) };
     store("guide", { title: S.guide.title, names: S.guide.names });
     NATIVE.startGuide(spec, "Lumi · " + S.guide.title);
+    recordTrip(it);
     GT.trip.fitted = false; GT.trip.zoomed = false; GT.trip.follow = true; compass(true);
     renderGuide({ phase: "walk", next: 0, cursor: -1, title: "Mencari posisi GPS…", text: "Kamu akan diberi tahu sebelum harus turun.", stopsLeft: -1, metersLeft: -1 });
     if ($("#btnGuide")) $("#btnGuide").innerHTML = ICO_NAV + "Pendampingan sedang berjalan";
@@ -2379,7 +2418,10 @@
       (places.length ? places.map(function (pl, i) {
         return '<div class="place-row"><span class="sg-ico saved">' + ICO_STAR + '</span><div class="pm"><b>' + esc(pl.name) + "</b><span>" + esc(pl.sub || (pl.p[0].toFixed(5) + ", " + pl.p[1].toFixed(5))) + '</span></div><button data-del="' + i + '">Hapus</button></div>';
       }).join("") : '<p style="margin:0">Belum ada tempat tersimpan.</p>') + "</div>";
+    html += historyCardHTML();
     $("#settingsBody").innerHTML = html;
+    var clearTrips = $("#btnClearTrips");
+    if (clearTrips) clearTrips.addEventListener("click", function () { store("trips", []); renderSettings(["trips", "ok", "Riwayat perjalanan dihapus."]); });
     $$(".gtfs-btn", $("#settingsBody")).forEach(function (b) { b.addEventListener("click", startGtfsUpdate); });
     bindChangeLinks($("#settingsBody"));
     $$("[data-show]", $("#settingsBody")).forEach(function (b) {
