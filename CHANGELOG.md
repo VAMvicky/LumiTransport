@@ -10,6 +10,40 @@
 
 ---
 
+## ✦ v2.9 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### ✨ Baru
+
+- **Bahasa Inggris pada hasil rute**: Fastest / Cheapest / Fewest transfers, Leaving now / Arrive before, public transport options / ride-hailing options, tombol Edit & Clear
+- **Baseline profile** ikut di APK untuk mempercepat startup
+
+### 🔧 Teknis
+
+- CI memeriksa `baseline.prof` benar-benar dikemas di APK
+- `versionCode` **20900**
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### ✨ New
+
+- **English in route results**: Fastest / Cheapest / Fewest transfers, Leaving now / Arrive before, public transport options / ride-hailing options, Edit & Clear buttons
+- **Baseline profile** shipped in the APK for faster startup
+
+### 🔧 Technical
+
+- CI verifies `baseline.prof` is actually packaged in the APK
+- `versionCode` **20900**
+
+</details>
+
+---
+
 ## ✦ v2.8 — 9 November 2026 / 9 November 2026
 
 <details open>
