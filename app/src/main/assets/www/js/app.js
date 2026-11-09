@@ -268,6 +268,13 @@
       '<button class="btn-sec" id="btnClearTrips" type="button">Hapus riwayat</button></div>';
   }
 
+  /* ------------------------------------------------------- aksesibilitas */
+  function accessCardHTML() {
+    return '<div class="set-card"><h3>Aksesibilitas</h3>' +
+      '<label class="set-field"><span>Mode aksesibel</span><input type="checkbox" id="setAccess"' + (cfg().accessible ? " checked" : "") + '></label>' +
+      '<p>Huruf lebih besar, tombol lebih tinggi, dan animasi dikurangi.</p></div>';
+  }
+
   /* ------------------------------------------------------- cadangkan & pulihkan */
   var BACKUP_KEYS = ["cfg", "favs", "trips", "places", "recent", "onboarded", "guide"];
   function backupText() {
@@ -1198,14 +1205,16 @@
 
   /* ------------------------------------------------------- pengaturan */
   // Tidak ada layanan yang butuh API key: peta OpenFreeMap/OSM, alamat lewat Google Maps (Bagikan).
-  var DEFAULT_CFG = { basemap: "liberty" };
+  var DEFAULT_CFG = { basemap: "liberty", accessible: false };
   var MAPSTYLES_KEYS = { liberty: 1, bright: 1, positron: 1, osm: 1 };
   function cfg() {
     var c = store("cfg") || {};
-    // migrasi dari CARTO (v1–v2.3 lama): gaya lama → gaya OpenFreeMap yang mirip
-    if (!MAPSTYLES_KEYS[c.basemap]) c.basemap = c.basemap === "positron" ? "positron" : "liberty";
     var o = {}; for (var k in DEFAULT_CFG) o[k] = c[k] === undefined ? DEFAULT_CFG[k] : c[k];
+    if (!MAPSTYLES_KEYS[o.basemap]) o.basemap = "liberty";
     return o;
+  }
+  function applyAccessible() {
+    try { document.body.classList.toggle("is-accessible", !!cfg().accessible); } catch (e) { }
   }
 
   /* ------------------------------------------------------- tempat tersimpan (dari Google Maps) */
@@ -2519,10 +2528,16 @@
     html += historyCardHTML();
     html += favCardHTML();
     html += backupCardHTML();
+    html += accessCardHTML();
     $("#settingsBody").innerHTML = html;
     var btnBackup = $("#btnBackup"), btnRestore = $("#btnRestore");
     if (btnBackup) btnBackup.addEventListener("click", doBackup);
     if (btnRestore) btnRestore.addEventListener("click", doRestore);
+    var accBox = $("#setAccess");
+    if (accBox) accBox.addEventListener("change", function () {
+      var c = cfg(); c.accessible = this.checked; store("cfg", c); applyAccessible();
+      renderSettings(["access", "ok", this.checked ? "Mode aksesibel aktif." : "Mode aksesibel dimatikan."]);
+    });
     var clearTrips = $("#btnClearTrips");
     if (clearTrips) clearTrips.addEventListener("click", function () { store("trips", []); renderSettings(["trips", "ok", "Riwayat perjalanan dihapus."]); });
     var saveFavBtn = $("#btnSaveFav");
@@ -2695,6 +2710,7 @@
   var obStage = store("onboarded");
   if (obStage !== 2) showOnboarding(obStage === 1 ? 2 : 1);
 
+  applyAccessible();
   syncTimeChip();
   renderIntro();
   renderGtfsBanner();
