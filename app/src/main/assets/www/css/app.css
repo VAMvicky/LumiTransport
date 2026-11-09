@@ -780,3 +780,16 @@ body.is-accessible .set-card p { font-size: 13.5px; line-height: 1.5; }
 .stop-row:first-child { border-top: 0; }
 .stop-row b { font-size: 14px; font-weight: 700; color: var(--ink); }
 .stop-row span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+/* Inset dari Android (status bar / navigation bar) menggantikan env() yang 0 di WebView */
+:root { --safe-t: 0px; }
+.plan-head { padding-top: calc(18px + var(--safe-t)); }
+.page-head { padding-top: calc(22px + var(--safe-t)); }
+.sheet-bar { padding-top: calc(10px + var(--safe-t)); }
+
+/* Logo header memakai ikon aplikasi */
+img.brand-mark { border-radius: 50%; object-fit: cover; display: block; }
+
+/* Jarak baris setelan agar teks dan checkbox tidak rapat */
+.set-row { margin-top: 16px; }
+.set-row + .set-row { margin-top: 16px; }
+.set-row + p { margin-top: 12px; }

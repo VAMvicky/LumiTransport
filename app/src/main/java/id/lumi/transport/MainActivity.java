@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
     private static String UA = "LumiTransport/2.0 (Android)";
     /** Pintasan dari app shortcut / Quick Settings, dikirim ke JS setelah halaman siap. */
     private String pendingShortcut;
+    private int insetsTop, insetsBottom;
 
     private WebView web;
     private android.widget.FrameLayout root;
@@ -124,18 +125,16 @@ public class MainActivity extends Activity {
         });
         root = new android.widget.FrameLayout(this);
         root.addView(web, new android.widget.FrameLayout.LayoutParams(-1, -1));
-        // Warna di area padding: biru di atas (senada header) dan putih di bawah (senada nav bar).
-        root.setBackground(new android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{ Color.parseColor("#2E95F0"), Color.parseColor("#FFFFFF") }));
         setContentView(root);
-        // Android 15 (targetSdk 35) memaksa edge-to-edge. Padding dipasang di root (content view),
-        // bukan di WebView, supaya seluruh halaman ikut tergeser dari status bar & navigation bar.
+        // Android 15 (targetSdk 35) memaksa edge-to-edge. Inset dikirim ke halaman sebagai
+        // variabel CSS (--safe-top/--safe-bottom), bukan padding native, supaya latar header
+        // tetap menyambung sampai ke atas layar.
         if (Build.VERSION.SDK_INT >= 35) {
             root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
                 @Override public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
                     android.graphics.Insets b = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
-                    v.setPadding(0, b.top, 0, b.bottom);
+                    insetsTop = b.top; insetsBottom = b.bottom;
+                    sendInsets();
                     return insets;
                 }
             });
@@ -343,6 +342,11 @@ public class MainActivity extends Activity {
         LumiTts.shutdown();
         if (web != null) web.destroy();
         super.onDestroy();
+    }
+
+    /** Kirim tinggi system bar ke halaman (dipakai CSS sebagai --safe-top/--safe-bottom). */
+    private void sendInsets() {
+        js("window.__lumiInsets && window.__lumiInsets(" + insetsTop + "," + insetsBottom + ")");
     }
 
     private void js(final String code) {
