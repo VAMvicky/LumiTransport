@@ -10,6 +10,40 @@
 
 ---
 
+## ✦ v2.4 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### ✨ Baru
+
+- **Widget "Berangkat / Pulang"**: dua tombol di layar utama, langsung membuka kolom asal atau tujuan
+- **Cadangkan & pulihkan**: bagikan cadangan berisi pengaturan, favorit, riwayat, dan tempat tersimpan; pulihkan dengan menempel teksnya
+
+### 🔧 Teknis
+
+- Job rilis menolak tag yang tidak menunjuk kepala `main`
+- `versionCode` **20400**
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### ✨ New
+
+- **"Leave / Home" widget**: two home-screen buttons that open the origin or destination field
+- **Backup & restore**: share a backup containing settings, favourites, history and saved places; restore by pasting the text
+
+### 🔧 Technical
+
+- Release job rejects tags that do not point at the head of `main`
+- `versionCode` **20400**
+
+</details>
+
+---
+
 ## ✦ v2.3 — 9 November 2026 / 9 November 2026
 
 <details open>
