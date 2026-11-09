@@ -717,3 +717,6 @@ html.pip #guide { top: 0 !important; left: 0 !important; right: 0 !important; bo
 .hist-main b { display: block; font-size: 13.5px; }
 .hist-main span { font-size: 12px; color: var(--muted); }
 .hist-fare { font-weight: 800; font-size: 13px; color: var(--ink); white-space: nowrap; }
+
+/* Tombol 'Pakai' pada rute favorit */
+.place-row button.use { color: var(--ink); }

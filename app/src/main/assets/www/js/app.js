@@ -268,6 +268,40 @@
       '<button class="btn-sec" id="btnClearTrips" type="button">Hapus riwayat</button></div>';
   }
 
+  /* ------------------------------------------------------- rute favorit */
+  function favs() { var f = store("favs"); return Array.isArray(f) ? f : []; }
+  function saveFav() {
+    if (!S.from || !S.to) { toast("Isi asal dan tujuan dulu"); return; }
+    var key = (S.from.name || "") + "|" + (S.to.name || "");
+    var list = favs();
+    if (list.some(function (f) { return f.key === key; })) { toast("Rute ini sudah ada di favorit"); return; }
+    list.unshift({ key: key, from: { name: S.from.name, p: S.from.p }, to: { name: S.to.name, p: S.to.p }, ts: Date.now() });
+    store("favs", list.slice(0, 20));
+    toast("Rute disimpan ke favorit");
+    renderSettings(["fav", "ok", "Rute favorit disimpan."]);
+  }
+  function useFav(i) {
+    var f = favs()[i]; if (!f) return;
+    S.from = { name: f.from.name, p: f.from.p };
+    S.to = { name: f.to.name, p: f.to.p };
+    $("#inFrom").value = S.from.name; $("#inTo").value = S.to.name;
+    $("#sheetSettings").hidden = true;
+    runPlan();
+  }
+  function delFav(i) {
+    var list = favs(); list.splice(i, 1); store("favs", list);
+    renderSettings(["fav", "ok", "Favorit dihapus."]);
+  }
+  function favCardHTML() {
+    var list = favs();
+    var rows = list.length ? list.map(function (f, i) {
+      return '<div class="place-row"><span class="sg-ico saved">' + ICO_STAR + '</span><div class="pm"><b>' + esc(f.from.name) + " → " + esc(f.to.name) +
+        "</b><span>Rute tersimpan</span></div><button class=\"use\" data-fav=\"" + i + '">Pakai</button><button data-favdel="' + i + '">Hapus</button></div>';
+    }).join("") : '<p style="margin:0">Belum ada rute favorit. Cari rute, lalu simpan di sini.</p>';
+    return '<div class="set-card"><h3>Rute favorit</h3>' + rows +
+      '<button class="btn-sec" id="btnSaveFav" type="button">Simpan rute yang sedang aktif</button></div>';
+  }
+
   /* ------------------------------------------------------- jembatan native */
   var httpCb = {}, httpSeq = 0;
   window.__lumiHttp = function (id, status, body) { var cb = httpCb[id]; delete httpCb[id]; if (cb) cb(status, body); };
@@ -2419,9 +2453,14 @@
         return '<div class="place-row"><span class="sg-ico saved">' + ICO_STAR + '</span><div class="pm"><b>' + esc(pl.name) + "</b><span>" + esc(pl.sub || (pl.p[0].toFixed(5) + ", " + pl.p[1].toFixed(5))) + '</span></div><button data-del="' + i + '">Hapus</button></div>';
       }).join("") : '<p style="margin:0">Belum ada tempat tersimpan.</p>') + "</div>";
     html += historyCardHTML();
+    html += favCardHTML();
     $("#settingsBody").innerHTML = html;
     var clearTrips = $("#btnClearTrips");
     if (clearTrips) clearTrips.addEventListener("click", function () { store("trips", []); renderSettings(["trips", "ok", "Riwayat perjalanan dihapus."]); });
+    var saveFavBtn = $("#btnSaveFav");
+    if (saveFavBtn) saveFavBtn.addEventListener("click", saveFav);
+    $$("[data-fav]", $("#settingsBody")).forEach(function (b) { b.addEventListener("click", function () { useFav(+b.dataset.fav); }); });
+    $$("[data-favdel]", $("#settingsBody")).forEach(function (b) { b.addEventListener("click", function () { delFav(+b.dataset.favdel); }); });
     $$(".gtfs-btn", $("#settingsBody")).forEach(function (b) { b.addEventListener("click", startGtfsUpdate); });
     bindChangeLinks($("#settingsBody"));
     $$("[data-show]", $("#settingsBody")).forEach(function (b) {
