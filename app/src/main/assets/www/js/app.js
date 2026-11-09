@@ -1274,6 +1274,18 @@
      riwayat, favorit, cadangan). Penggantian berbasis frasa, jadi aman untuk
      HTML dan tidak menyentuh angka/nama tempat. */
   var TR = {
+    "pilihan transportasi umum": "public transport options",
+    "pilihan ojol": "ride-hailing options",
+    "Tidak ada opsi dengan": "No options with",
+    "Coba lepas salah satu filter moda": "Try removing one of the mode filters",
+    "Berangkat sekarang": "Leaving now",
+    "Tiba sebelum": "Arrive before",
+    "Minim transit": "Fewest transfers",
+    "Tercepat": "Fastest",
+    "Termurah": "Cheapest",
+    ">Ubah<": ">Edit<",
+    ">Bersihkan<": ">Clear<",
+    " ke ": " to ",
     "Siap-siap turun": "Get ready to alight",
     "Turun sekarang": "Alight now",
     "Jalan kaki": "Walk",
@@ -1847,7 +1859,7 @@
         "</div>";
     });
     html += '<p class="disclaim">Waktu dan tarif adalah perkiraan. Tarif ojol mengikuti batas tarif Kemenhub zona Jabodetabek ditambah biaya jasa; harga di aplikasi bisa berbeda saat jam sibuk.</p>';
-    res.innerHTML = html;
+    res.innerHTML = tr(html);
     $("#btnEdit").addEventListener("click", function () { S.field = "to"; inTo.focus(); });
     $("#btnClear").addEventListener("click", clearPlan);
     // "Tampilkan semua": layar tetap di posisi tombol; opsi tambahan muncul di bawahnya.
