@@ -775,3 +775,8 @@ body.is-accessible .set-card p { font-size: 13.5px; line-height: 1.5; }
 
 /* Beranda: rute favorit tanpa data */
 .fav-empty { margin: 0; font-size: 13.5px; color: var(--muted); }
+/* Tab Halte: daftar halte/stasiun */
+.stop-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; width: 100%; padding: 12px 4px; border-top: 1px solid var(--line); background: none; text-align: left; }
+.stop-row:first-child { border-top: 0; }
+.stop-row b { font-size: 14px; font-weight: 700; color: var(--ink); }
+.stop-row span { font-size: 12px; color: var(--muted); white-space: nowrap; }

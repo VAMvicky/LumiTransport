@@ -268,6 +268,50 @@
       '<button class="btn-sec" id="btnClearTrips" type="button">Hapus riwayat</button></div>';
   }
 
+  /* ------------------------------------------------------- tab halte & riwayat */
+  var STOP_INDEX = null;
+  function stopIndex() {
+    if (STOP_INDEX) return STOP_INDEX;
+    var byKey = {}, out = [];
+    var lines = (window.LUMI_DATA && LUMI_DATA.lines) ? LUMI_DATA.lines : [];
+    lines.forEach(function (l) {
+      (l.dirs || []).forEach(function (d) {
+        (d.s || []).forEach(function (st) {
+          if (!st || !st.n || !st.p) return;
+          var key = st.n + "@" + (+st.p[0]).toFixed(4) + "," + (+st.p[1]).toFixed(4);
+          if (!byKey[key]) { byKey[key] = { n: st.n, p: st.p, codes: {} }; out.push(byKey[key]); }
+          byKey[key].codes[l.code] = 1;
+        });
+      });
+    });
+    STOP_INDEX = out.sort(function (a, b) { return a.n.localeCompare(b.n); });
+    return STOP_INDEX;
+  }
+  function renderStops(q) {
+    q = (q || "").toLowerCase();
+    var list = stopIndex().filter(function (s) { return !q || s.n.toLowerCase().indexOf(q) >= 0; }).slice(0, 200);
+    var box = $("#stopList");
+    if (!box) return;
+    if (!list.length) { box.innerHTML = '<p class="fav-empty">Tidak ada halte atau stasiun yang cocok.</p>'; return; }
+    box.innerHTML = list.map(function (s, i) {
+      var codes = Object.keys(s.codes).slice(0, 5).join(", ");
+      return '<button class="stop-row" data-stop="' + i + '"><b>' + esc(s.n) + '</b><span>' + esc(codes) + "</span></button>";
+    }).join("");
+    $$("#stopList .stop-row").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var s = list[+b.dataset.stop];
+        if (s) openPicker(S.field || "from", { center: s.p, zoom: 17, title: s.n });
+      });
+    });
+  }
+  function renderHistoryTab() {
+    var box = $("#historyBody");
+    if (!box) return;
+    box.innerHTML = tr(historyCardHTML()).replace('id="btnClearTrips"', 'id="btnClearHistory"');
+    var c = $("#btnClearHistory");
+    if (c) c.addEventListener("click", function () { store("trips", []); renderHistoryTab(); toast("Riwayat perjalanan dihapus"); });
+  }
+
   /* ------------------------------------------------------- aksesibilitas */
   function langCardHTML() {
     var lang = cfg().lang === "en" ? "en" : "id";
@@ -1261,7 +1305,14 @@
         [".live-pill", "LIVE"],
         [".live-entry-txt > span", "See where Transjakarta & Mikrotrans buses are right now on the map."],
         [".modes-strip .sect-title", "What Lumi factors in"],
-        ["#recentWrap .sect-title", "Recent searches"]
+        ["#recentWrap .sect-title", "Recent searches"],
+        ["#nav .nav-btn[data-tab=stops] span", "Stops"],
+        ["#nav .nav-btn[data-tab=history] span", "History"],
+        ["#tab-stops h1", "Stops &amp; stations"],
+        ["#tab-stops p", "Find a Transjakarta stop or a KRL, MRT, LRT and Airport Rail station."],
+        ["#tab-history h1", "History"],
+        ["#tab-history p", "Trips you started, with their fares."],
+        ["#inStop", "Search stop or station"]
       ],
       attr: [
         ["#inFrom", "placeholder", "From: address, stop, or place"],
@@ -1445,6 +1496,8 @@
     hideSuggest();
     if (t === "lines" && !$("#lineList").childElementCount) renderLines();
     if (t === "info" && !$("#infoBody").childElementCount) renderInfo();
+    if (t === "stops" && !$("#stopList").childElementCount) renderStops("");
+    if (t === "history") renderHistoryTab();
   }
   $$(".nav-btn").forEach(function (b) { b.addEventListener("click", function () { setTab(b.dataset.tab); }); });
 
@@ -2917,6 +2970,8 @@
   var obStage = store("onboarded");
   if (obStage !== 2) showOnboarding(obStage === 1 ? 2 : 1);
 
+  var inStopEl = $('#inStop');
+  if (inStopEl) inStopEl.addEventListener('input', function () { renderStops(this.value); });
   applyAccessible();
   applyLang();
   syncTimeChip();
