@@ -10,6 +10,40 @@
 
 ---
 
+## ✦ v2.5 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### ✨ Baru
+
+- **Mode aksesibel**: area sentuh minimal 52 px, teks diperbesar, animasi mengikuti setelan "kurangi animasi" HP
+
+### 🔧 Teknis
+
+- **targetSdk 35** dengan **edge-to-edge**: konten WebView diberi padding setinggi status bar + navigation bar
+- Sisa kode migrasi gaya peta pra-2.0 dihapus
+- `versionCode` **20500**
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### ✨ New
+
+- **Accessible mode**: minimum 52 px tap targets, larger text, animations follow the system "reduce motion" setting
+
+### 🔧 Technical
+
+- **targetSdk 35** with **edge-to-edge**: the WebView is padded by the status and navigation bar heights
+- Remaining pre-2.0 map-style migration code removed
+- `versionCode` **20500**
+
+</details>
+
+---
+
 ## ✦ v2.4 — 9 November 2026 / 9 November 2026
 
 <details open>
