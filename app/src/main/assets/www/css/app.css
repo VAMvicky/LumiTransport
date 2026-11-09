@@ -708,3 +708,12 @@ html.pip #guide { top: 0 !important; left: 0 !important; right: 0 !important; bo
 /* Tombol di kartu Tentang */
 .about-btn { padding: 10px 14px; border-radius: 12px; background: #fff; border: 1px solid var(--line); font-weight: 700; font-size: 13.5px; margin: 2px 6px 2px 0; }
 .about-btn:disabled { opacity: .45; }
+
+/* Riwayat perjalanan di Pengaturan */
+.hist-list { margin: 4px 0 10px; }
+.hist-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+.hist-row:first-child { border-top: 0; }
+.hist-main { flex: 1; min-width: 0; }
+.hist-main b { display: block; font-size: 13.5px; }
+.hist-main span { font-size: 12px; color: var(--muted); }
+.hist-fare { font-weight: 800; font-size: 13px; color: var(--ink); white-space: nowrap; }
