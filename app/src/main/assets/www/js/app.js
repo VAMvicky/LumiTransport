@@ -280,8 +280,8 @@
   }
   function accessCardHTML() {
     return '<div class="set-card"><h3>Aksesibilitas</h3>' +
-      '<label class="set-field"><span>Mode aksesibel</span><input type="checkbox" id="setAccess"' + (cfg().accessible ? " checked" : "") + '></label>' +
-      '<label class="set-field"><span>Panduan suara</span><input type="checkbox" id="setVoice"' + (cfg().voice ? " checked" : "") + '></label>' +
+      '<label class="set-row"><span>Mode aksesibel</span><input type="checkbox" id="setAccess"' + (cfg().accessible ? " checked" : "") + '></label>' +
+      '<label class="set-row"><span>Panduan suara</span><input type="checkbox" id="setVoice"' + (cfg().voice ? " checked" : "") + '></label>' +
       '<p>Huruf lebih besar, tombol lebih tinggi, dan animasi dikurangi. Panduan suara membacakan langkah saat pendampingan berjalan.</p></div>';
   }
 
@@ -1256,7 +1256,12 @@
         ["#btnTimeOk", "Use this time"],
         ["#sheetPick .sheet-title", "Pick a point on the map"],
         ["#pickOk", "Use this point"],
-        ["#sheetLive .sheet-title", "Buses near you"]
+        ["#sheetLive .sheet-title", "Buses near you"],
+        ["#favTitle", "Favourite routes"],
+        [".live-pill", "LIVE"],
+        [".live-entry-txt > span", "See where Transjakarta & Mikrotrans buses are right now on the map."],
+        [".modes-strip .sect-title", "What Lumi factors in"],
+        ["#recentWrap .sect-title", "Recent searches"]
       ],
       attr: [
         ["#inFrom", "placeholder", "From: address, stop, or place"],
@@ -1597,13 +1602,25 @@
 
   /* ------------------------------------------------------- beranda */
   function renderIntro() {
-    $("#popular").innerHTML = POPULAR.slice(0, 10).map(function (p, i) { return '<button data-i="' + i + '">' + esc(p.name) + "</button>"; }).join("");
-    $$("#popular button").forEach(function (b) {
-      b.addEventListener("click", function () {
-        var p = POPULAR[+b.dataset.i];
-        openGoogleMaps("to", p.name + ", " + p.sub);
+    var favList = favs().slice(0, 10);
+    var pop = $("#popular");
+    if (!favList.length) {
+      pop.innerHTML = '<p class="fav-empty">Belum ada rute favorit. Cari rute, lalu simpan lewat Pengaturan → Rute favorit.</p>';
+    } else {
+      pop.innerHTML = favList.map(function (f, i) {
+        return '<button data-fav-i="' + i + '">' + esc(f.from.name) + " → " + esc(f.to.name) + "</button>";
+      }).join("");
+      $$("#popular button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var f = favs()[+b.dataset.favI];
+          if (!f) return;
+          S.from = { name: f.from.name, p: f.from.p };
+          S.to = { name: f.to.name, p: f.to.p };
+          $("#inFrom").value = S.from.name; $("#inTo").value = S.to.name;
+          runPlan();
+        });
       });
-    });
+    }
     var rec = store("recent") || [];
     $("#recentWrap").hidden = !rec.length;
     $("#recent").innerHTML = rec.map(function (r, i) {
@@ -1664,9 +1681,10 @@
     return diff === 0 ? "" : diff === 1 ? "besok " : "";
   }
   function timeLabel() {
-    if (S.time.mode === "now") return "Berangkat sekarang";
+    var en = cfg().lang === "en";
+    if (S.time.mode === "now") return en ? "Leaving now" : "Berangkat sekarang";
     var d = targetDate(), t = dayWord(d) + clock(d);
-    return (S.time.mode === "dep" ? "Berangkat " : "Tiba ") + t;
+    return (S.time.mode === "dep" ? (en ? "Leave " : "Berangkat ") : (en ? "Arrive " : "Tiba ")) + t;
   }
   function syncTimeChip() {
     $("#timeLabel").textContent = timeLabel();
@@ -2838,7 +2856,7 @@
   };
 
   /* ------------------------------------------------------- layar sambutan (pertama kali dibuka) */
-  var OB_LOGO = '<svg viewBox="0 0 108 108" aria-hidden="true"><defs><linearGradient id="obg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7FCBF7"/><stop offset=".5" stop-color="#5CA9EE"/><stop offset="1" stop-color="#3A7BE4"/></linearGradient></defs>' +
+  var OB_LOGO = '<img src="img/icon.png" alt="Lumi Transport">';
     '<circle cx="54" cy="54" r="52" fill="url(#obg)"/><path d="M42,38 L42,60 Q42,70 52,70 L68,70" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
     '<circle cx="42" cy="38" r="7" fill="#1565D8" stroke="#fff" stroke-width="5"/><circle cx="68" cy="70" r="13" fill="#fff" fill-opacity=".33"/><circle cx="68" cy="70" r="8" fill="#fff"/>' +
     '<path d="M70,30 L72.6,36.4 L79,39 L72.6,41.6 L70,48 L67.4,41.6 L61,39 L67.4,36.4 Z" fill="#fff"/></svg>';
