@@ -269,6 +269,18 @@ jobs:
           mkdir -p out
           cp "$APK" "out/LumiTransport-v${{ steps.ver.outputs.version }}.apk"
 
+      - name: Pastikan baseline profile ikut di APK
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          if unzip -l "$APK" | grep -qE 'baseline\.prof(\.m)?$'; then
+            echo "baseline profile ditemukan:"
+            unzip -l "$APK" | grep -E 'baseline\.prof'
+          else
+            echo "::error::baseline profile tidak dikemas AGP"
+            exit 1
+          fi
+
       - name: Upload artifact Gradle
         uses: actions/upload-artifact@v4
         with:
