@@ -276,6 +276,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Tag harus menunjuk kepala main
+        run: |
+          set -euo pipefail
+          EXPECTED=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$EXPECTED" != "$GITHUB_SHA" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME menunjuk $GITHUB_SHA, bukan kepala main ($EXPECTED). Rilis hanya dari commit terbaru main."
+            exit 1
+          fi
+          echo "Tag menunjuk kepala main: $EXPECTED"
+
       - name: Pastikan tag cocok dengan release-notes/CURRENT
         run: |
           set -euo pipefail
