@@ -10,6 +10,40 @@
 
 ---
 
+## ✦ v2.6 — 9 November 2026 / 9 November 2026
+
+<details open>
+<summary><h2>🇮🇩 Bahasa Indonesia</h2></summary>
+
+### ✨ Baru
+
+- **Pilihan bahasa Indonesia / English** di Pengaturan
+- Terjemahan mencakup header, kolom asal-tujuan, tombol, tab, navigasi, judul sheet, kartu Pengaturan, dan Tentang
+- Bahasa awal mengikuti bahasa HP; mengganti balik ke Indonesia memulihkan teks asli
+
+### 🔧 Teknis
+
+- `versionCode` **20600**
+
+</details>
+
+<details>
+<summary><h2>🇬🇧 English</h2></summary>
+
+### ✨ New
+
+- **Indonesian / English language switch** in Settings
+- Translation covers the header, origin/destination fields, buttons, tabs, navigation, sheet titles, Settings cards and About
+- The initial language follows the phone; switching back to Indonesian restores the original text
+
+### 🔧 Technical
+
+- `versionCode` **20600**
+
+</details>
+
+---
+
 ## ✦ v2.5 — 9 November 2026 / 9 November 2026
 
 <details open>
