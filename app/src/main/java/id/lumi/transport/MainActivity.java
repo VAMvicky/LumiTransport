@@ -336,6 +336,7 @@ public class MainActivity extends Activity {
         // Aplikasi ditutup (bukan sekadar diputar/dibuat ulang) â†’ pendampingan ikut berhenti.
         if (isFinishing() || wasPip) NavService.stop(this);
         pool.shutdownNow();
+        LumiTts.shutdown();
         if (web != null) web.destroy();
         super.onDestroy();
     }
@@ -735,6 +736,13 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        /** Panduan suara: ucapkan teks pendampingan. */
+        @JavascriptInterface
+        public void speak(final String text) { LumiTts.speak(MainActivity.this, text); }
+
+        @JavascriptInterface
+        public void stopSpeak() { LumiTts.stop(); }
+
         public void openUrl(final String url) {
             main.post(new Runnable() { @Override public void run() { openExternal(url); }});
         }
