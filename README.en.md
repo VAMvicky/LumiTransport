@@ -32,7 +32,7 @@
 | 🎯 **Filters you control** | Sort by Fastest, Cheapest or Fewest transfers, then pick modes: only trips that **include TJ**, or TJ + LRT, and so on. |
 | 🚌 **Live bus positions** | **Buses near you** shows current Transjakarta, Mikrotrans, Royaltrans and Transjabodetabek buses on the map. Trip details estimate the **next bus at your boarding stop**, and route details list every bus on that route. |
 | 🧭 **GPS guidance** | See where you are, **how many stops are left**, and feel a vibration for **"Get ready"** and **"Get off now"**, even with the screen off. |
-| 🔔 **Know when routes change** | Official Transjakarta data is **checked every hour**. New routes, removed routes or changed stops trigger a **notification**. |
+| 🔔 **Know when routes change** | Official Transjakarta data is **checked regularly**. New routes, removed routes or changed stops trigger a **notification**. |
 | 🖼️ **Share as an image** | Every route can be shared as a **clean image** to WhatsApp, Instagram or anywhere. |
 | 💸 **Correct fares** | Transferring inside a station is free; leaving the station means tapping in again. Covers SH2, Hub Connector, MRT per-station fares and Airport Rail. |
 | 🌙 **Knows opening hours** | At midnight Lumi only uses 24-hour services (AMARI corridors 1–14, JAK36/47/52/75) and ride-hailing. |
@@ -107,7 +107,7 @@
 **🔔 Always-current routes**
 - On first launch Lumi downloads the **official Transjakarta GTFS** and processes it on the phone
 - **Every hour** (in the background, very little data) Lumi checks:
-  1. the route-change feed in this repo (`data/route_changes.json`), updated hourly by GitHub Actions, and
+  1. the route-change feed in this repo (`data/route_changes.json`), updated several times a day by GitHub Actions (scheduled hourly, but GitHub often delays scheduled runs by hours), and
   2. the version signature of the official GTFS file (ETag / Last-Modified / size)
 - When something changes, route data is re-downloaded, differences are computed (new or removed routes, stops added/removed, variant patterns changed) and a **notification** appears
 - History is shown on Home and in **Settings → Route changes**
@@ -214,7 +214,7 @@ Make sure notifications are allowed and **background running** is enabled (phone
 <details>
 <summary><b>How quickly does Lumi learn about route changes?</b></summary>
 
-Within about **1 hour** of Transjakarta updating its official GTFS. GitHub Actions in this repo checks the GTFS every hour, and the app checks the GTFS file's version signature every hour too. Changes announced only on social media (e.g. temporary diversions) are picked up once they reach the official data.
+Usually within a few hours of Transjakarta updating its official GTFS. The app checks the GTFS file's version signature about every hour when online (Android may defer this in battery-saving mode), and GitHub Actions in this repo checks the GTFS several times a day. Changes announced only on social media (e.g. temporary diversions) are picked up once they reach the official data.
 </details>
 
 <details>
@@ -250,8 +250,8 @@ Fares are estimates based on published rules (see [Fares used](#-fares-used)). P
 | Maps | **Leaflet** + **MapLibre GL** (maplibre-gl-leaflet) with **OpenFreeMap** vector tiles (OpenStreetMap); standard OSM tiles as fallback |
 | Routing | Multimodal graph + Dijkstra + combination search (`engine.js`), offline |
 | Route data | Official Transjakarta GTFS (processed on the phone by `GtfsImporter.java`) |
-| Background | Foreground service (GPS guidance), JobScheduler (hourly and daily route checks) |
-| CI/CD | GitHub Actions: build the APK on every push and watch for route changes every hour |
+| Background | Foreground service (GPS guidance), JobScheduler (regular and daily route checks) |
+| CI/CD | GitHub Actions: build the APK on every push and watch for route changes regularly |
 
 ### 🏗️ Build from source
 Lumi builds **without Gradle**, using `aapt2`, `ecj`, `d8` and `apksigner`:

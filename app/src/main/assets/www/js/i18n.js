@@ -241,7 +241,7 @@
     "Semua transportasi Jabodetabek dalam satu rute: Transjakarta, Mikrotrans, KRL, MRT, LRT, sampai ojol.": "All Greater Jakarta transport in one route: Transjakarta, Mikrotrans, KRL, MRT, LRT, even ride-hailing.",
     "Semua kombinasi rute": "Every route combination", "Tercepat, termurah, atau minim transit, lengkap dengan tarif dan waktu tiba.": "Fastest, cheapest or fewest transfers, complete with fares and arrival times.",
     "Pendampingan GPS": "GPS guidance", "Tahu posisimu, sisa pemberhentian, dan diingatkan saat harus turun.": "Knows where you are and how many stops are left, and reminds you when to get off.",
-    "Rute selalu terbaru": "Always up-to-date routes", "Data resmi Transjakarta dicek tiap jam, kamu diberi tahu bila ada rute berubah.": "Official Transjakarta data is checked every hour, and you're told when a route changes.",
+    "Rute selalu terbaru": "Always up-to-date routes", "Data resmi Transjakarta dicek berkala, kamu diberi tahu bila ada rute berubah.": "Official Transjakarta data is checked regularly, and you're told when a route changes.",
     "Mulai": "Get started",
     "Alamat dicari lewat Google Maps lalu dibagikan ke Lumi. Lokasimu hanya disimpan di HP ini.": "Addresses are found in Google Maps and shared to Lumi. Your location is only stored on this phone.",
     "Satu langkah lagi": "One more step", "Izinkan agar Lumi bisa mendampingi perjalanan dan memberi tahu saat harus turun.": "Allow these so Lumi can guide your trip and tell you when to get off.",

@@ -22,7 +22,7 @@ AAPT2=${AAPT2:-$SDK/aapt2}
 D8_JAR=${D8_JAR:-$SDK/d8.jar}
 APKSIGNER_JAR=${APKSIGNER_JAR:-$SDK/apksigner.jar}
 KEYSTORE=${KEYSTORE:-lumi-release.keystore}
-KS_PASS=${KS_PASS:-lumi123}
+KS_PASS=${KS_PASS:-}
 KS_ALIAS=${KS_ALIAS:-lumi}
 MIN_SDK=26
 TARGET_SDK=35
@@ -64,8 +64,13 @@ python3 tools/zipalign.py "$OUT/unaligned.apk" "$OUT/aligned.apk"
 
 echo "6/6 tanda tangan"
 if [ ! -f "$KEYSTORE" ]; then
+  # Kunci sementara untuk uji lokal/CI tanpa Secrets: kata sandi acak, tidak pernah tertulis di repo.
+  if [ -z "$KS_PASS" ]; then KS_PASS=$(head -c 24 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 20); fi
   keytool -genkeypair -keystore "$KEYSTORE" -alias "$KS_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
     -storepass "$KS_PASS" -keypass "$KS_PASS" -dname "CN=Lumi Transport, O=Lumi, C=ID" >/dev/null 2>&1
+fi
+if [ -z "$KS_PASS" ]; then
+  echo "KS_PASS belum diisi untuk keystore $KEYSTORE" >&2; exit 1
 fi
 java -jar "$APKSIGNER_JAR" sign --ks "$KEYSTORE" --ks-pass "pass:$KS_PASS" --key-pass "pass:$KS_PASS" \
   --ks-key-alias "$KS_ALIAS" --min-sdk-version "$MIN_SDK" --out "$OUT/$APK_NAME" "$OUT/aligned.apk"

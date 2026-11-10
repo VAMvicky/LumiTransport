@@ -10,6 +10,13 @@
 
 ---
 
+## ✦ v2.13.3 — 10 November 2026 / 10 November 2026
+
+- 🇮🇩 Perbaikan hasil audit: lokasi lebih tepat (cache lama tidak dipakai, GPS + jaringan bersamaan) dan posisi di bus langsung dikirim terus-menerus; semua waktu memakai WIB; daftar bus langsung tidak melompat saat digulir; ganti bahasa tidak menghapus pencarian; teks "tiap jam" → "berkala"; alat debug mati di rilis. CI: uji mesin rute dengan pemeriksaan, uji asap emulator, rilis wajib bertanda tangan resmi. `versionCode` **21303**
+- 🇬🇧 Audit fixes: more accurate location (stale cache ignored, GPS + network together) and continuous position updates in live buses; all times use WIB; live bus list no longer jumps while scrolling; changing language keeps the open route search; "hourly" wording → "regularly"; debug hooks off in release builds. CI: engine test with real assertions, emulator smoke test, releases must be signed with the official key. `versionCode` **21303**
+
+---
+
 ## ✦ v2.13.2 — 10 November 2026 / 10 November 2026
 
 - 🇮🇩 Bus langsung: posisiku ikut bergerak + senter arah, filter per kode rute, chip berisi jumlah bus sekitar, label kode seragam (JAK71). Perkiraan tiba dihitung juga dari posisi bus di rute dan dibandingkan dengan ETA feed. Perbaikan: sambutan tidak berkedip ke beranda, garis pendampingan tidak berkedip. `versionCode` **21302**

@@ -168,7 +168,9 @@
     window.__lumiStopFix = { date: F.date, applied: n };
   })();
   var planner = new E.Planner(DATA);
-  window.__lumiDebug = { planner: planner, data: DATA, src: function () { return ROUTE_SRC; }, tripZoom: function () { return tripMap ? tripMap.getZoom() : -1; }, liveWalk: function () { return LIVEW; }, busEta: function (b, l, p, f) { return busEta(b, l, p, f); }, routeEta: function (b, l, p) { return routeEta(b, l, p); }, dynKm: function () { return (GT.trip.dyn || []).map(function (d) { return pathKm(d.lines[1].getLatLngs().map(function (q) { return [q.lat, q.lng]; })); }); } };   // untuk pengujian
+  // B10: kait uji hanya aktif di browser (bukan aplikasi Android) atau bila localStorage "lumi:debug" = "1".
+  var DEBUG = !window.LumiNative; try { if (localStorage.getItem("lumi:debug") === "1") DEBUG = true; } catch (e) { }
+  if (DEBUG) window.__lumiDebug = { planner: planner, data: DATA, src: function () { return ROUTE_SRC; }, tripZoom: function () { return tripMap ? tripMap.getZoom() : -1; }, liveWalk: function () { return LIVEW; }, busEta: function (b, l, p, f) { return busEta(b, l, p, f); }, routeEta: function (b, l, p) { return routeEta(b, l, p); }, dynKm: function () { return (GT.trip.dyn || []).map(function (d) { return pathKm(d.lines[1].getLatLngs().map(function (q) { return [q.lat, q.lng]; })); }); } };   // untuk pengujian
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var NATIVE = window.LumiNative || null;
@@ -277,11 +279,11 @@
     if (!list.length) {
       return '<div class="set-card"><h3>Riwayat perjalanan</h3><p>Belum ada perjalanan. Begitu kamu memulai pendampingan pada sebuah rute, perjalanan itu tercatat di sini beserta ongkosnya.</p></div>';
     }
-    var m0 = new Date(); m0.setDate(1); m0.setHours(0, 0, 0, 0);
+    var m0 = nowWib(); m0.setDate(1); m0.setHours(0, 0, 0, 0);
     var total = 0, n = 0;
-    list.forEach(function (t) { if ((t.ts || 0) >= m0.getTime()) { total += t.fare || 0; n++; } });
+    list.forEach(function (t) { if (wibOf(t.ts || 0).getTime() >= m0.getTime()) { total += t.fare || 0; n++; } });
     var rows = list.slice(0, 12).map(function (t) {
-      var d = new Date(t.ts || 0);
+      var d = wibOf(t.ts || 0);
       var tanggal = d.getDate() + "/" + (d.getMonth() + 1) + "/" + String(d.getFullYear()).slice(2);
       return '<div class="hist-row"><div class="hist-main"><b>' + esc(t.from) + " → " + esc(t.to) + "</b><span>" + tanggal +
         (t.modes ? " · " + esc(T(t.modes)) : "") + (t.mins ? " · " + mins(t.mins) : "") + '</span></div><div class="hist-fare">' + rp(t.fare || 0) + "</div></div>";
@@ -625,7 +627,7 @@
     for (var i = 0; i < b.stops.length; i++) if (+b.stops[i].eta > 0) return { name: b.stops[i].name, eta: +b.stops[i].eta };
     return null;
   }
-  /* ETA (detik) bus ini ke halte `from`, hanya bila bus juga akan lewat `to` sesudahnya (arah benar).
+  /* ETA (menit) bus ini ke halte `from`, hanya bila bus juga akan lewat `to` sesudahnya (arah benar).
      Nama halte di data rute dan di feed kadang berbeda ("Cawang Sentral" vs "Cawang"), jadi
      dicocokkan lewat nama dulu, lalu lewat koordinat halte. */
   function etaTo(b, from, to, fromP, toP) {
@@ -811,7 +813,6 @@
     var sheet = $("#sheetLive"); if (!sheet) return;
     var titleEl = $("#sheetLive .sheet-title");
     if (titleEl) titleEl.textContent = title || tl("Bus di sekitarmu", "Buses near you");
-    var sheet = $("#sheetLive"); if (!sheet) return;
     sheet.hidden = false;
     $("#liveBody").innerHTML = opt.stop ? '<div class="live-card"><b>Menghubungkan ke data armada…</b></div>' :
       '<div class="live-card"><b>Mencari lokasimu…</b><p>Lumi akan menampilkan bus Transjakarta, Mikrotrans, dan Royaltrans yang melintas di sekitarmu.</p></div>';
@@ -907,27 +908,57 @@
           });
         });
       };
-      var rT = null;
+      // B8: panel digambar ulang paling sering tiap 1,5 dtk, dan tidak saat jari sedang menyentuh panel
+      // (ketukan tidak hilang karena tombolnya diganti di tengah sentuhan).
+      var rT = null, body = $("#liveBody");
+      if (!body._touchHook) {
+        body._touchHook = true;
+        body.addEventListener("pointerdown", function () { body._touching = true; }, true);
+        ["pointerup", "pointercancel"].forEach(function (ev) {
+          body.addEventListener(ev, function () { body._touching = false; body._touchEnd = Date.now(); }, true);
+        });
+        body.addEventListener("scroll", function () { body._touchEnd = Date.now(); }, true);
+      }
+      var schedule = function () {
+        if (rT) return;
+        rT = setTimeout(function tick() {
+          if (body._touching || Date.now() - (body._touchEnd || 0) < 600) { rT = setTimeout(tick, 400); return; }
+          rT = null; render();
+        }, 1500);
+      };
       nearBoard = new LiveBoard(liveMap, list.map(function (x) { return x.l.code; }), function (b) { return colors[LumiLive.norm(b.code)]; },
-        function () { if (!rT) rT = setTimeout(function () { rT = null; render(); }, 700); }, labelOf);
+        schedule, labelOf);
       // Ikuti posisiku selama layar ini terbuka: GPS tiap ±4 dtk + kompas untuk senter.
       var follow = !stop;
       if (!liveMap._dragHook) { liveMap._dragHook = true; liveMap.on("dragstart", function () { if (liveMap._unfollow) liveMap._unfollow(); }); }
       liveMap._unfollow = function () { follow = false; };
       var alive = true, gT = null;
-      var track = function () {
+      var moveMe = function (np) {
         if (!alive) return;
-        locate().then(function (o) {
-          if (!alive) return;
-          var np = [o.lat, o.lon]; S.myPos = np;
-          if (!liveMap._me) liveMap._me = L.marker(np, { icon: meIcon(), zIndexOffset: 1000, interactive: false }).addTo(liveMap);
-          else slideMarker(liveMap._me, np);
-          if (follow) liveMap.panTo(np, { animate: true, duration: 0.8 });
-        }).catch(function () { }).then(function () { if (alive) gT = setTimeout(track, 4000); });
+        S.myPos = np;
+        if (!liveMap._me) liveMap._me = L.marker(np, { icon: meIcon(), zIndexOffset: 1000, interactive: false }).addTo(liveMap);
+        else slideMarker(liveMap._me, np);
+        if (follow) liveMap.panTo(np, { animate: true, duration: 0.8 });
       };
-      gT = setTimeout(track, 1500);
+      var native = !!(NATIVE && NATIVE.watchPos);
+      if (native) {
+        // Android: GPS terus-menerus (tiap ±2 dtk), bukan meminta posisi berulang yang bisa kembali dari cache.
+        window.__lumiPos = function (lat, lon, acc) { if (acc < 0 || acc <= 80) moveMe([lat, lon]); };
+        NATIVE.watchPos(true);
+      } else {
+        var track = function () {
+          if (!alive) return;
+          locate().then(function (o) { moveMe([o.lat, o.lon]); }).catch(function () { })
+            .then(function () { if (alive) gT = setTimeout(track, 4000); });
+        };
+        gT = setTimeout(track, 1500);
+      }
       compass(true); LIVE_HEADING.map = liveMap;
-      nearBoard.onStop = function () { alive = false; clearTimeout(gT); LIVE_HEADING.map = null; if (!S.guide) compass(false); };
+      nearBoard.onStop = function () {
+        alive = false; clearTimeout(gT); LIVE_HEADING.map = null;
+        if (native) { try { NATIVE.watchPos(false); } catch (e) { } window.__lumiPos = null; }
+        if (!S.guide) compass(false);
+      };
       stopWhenHidden(sheet, nearBoard);
       render();
     };
@@ -1100,8 +1131,8 @@
   function changesHistoryHTML() {
     var c = getChanges();
     var html = '<div class="set-card" id="chgHistory"><h3>' + tl("Perubahan rute", "Route changes") + "</h3><p>" +
-      tl("Lumi mengunduh data resmi Transjakarta setiap hari (otomatis, butuh internet) dan memberi notifikasi bila ada rute yang berubah.",
-        "Lumi downloads the official Transjakarta data every day (automatically, needs internet) and notifies you when a route changes.") +
+      tl("Lumi memeriksa data resmi Transjakarta secara berkala (otomatis, butuh internet) dan memberi notifikasi bila ada rute yang berubah.",
+        "Lumi checks the official Transjakarta data regularly (automatically, needs internet) and notifies you when a route changes.") +
       (c && c.lastDate ? tl(" Terakhir diperiksa: ", " Last checked: ") + esc(fmtDate(c.lastDate)) + "." : "") + "</p>";
     if (!c || !c.list || !c.list.length) return html + '<p>Belum ada perubahan tercatat sejak data pertama diunduh.</p></div>';
     c.list.slice(0, 8).forEach(function (e) {
@@ -1837,8 +1868,12 @@
   /* ------------------------------------------------------- waktu perjalanan */
   S.time = { mode: "now", hm: "08:00" };
   function minOf(d) { return d.getHours() * 60 + d.getMinutes(); }
+  /* B7: jadwal & tarif mengikuti WIB. Objek Date "jam dinding WIB": getter lokalnya = waktu WIB,
+     jadi HP dengan zona waktu lain tetap melihat jam operasional dan tarif pagi yang benar. */
+  function nowWib() { var d = new Date(); return new Date(d.getTime() + (d.getTimezoneOffset() + 420) * 60000); }
+  function wibOf(ts) { var d = new Date(ts); return new Date(ts + (d.getTimezoneOffset() + 420) * 60000); }
   function targetDate() {
-    var now = new Date();
+    var now = nowWib();
     if (S.time.mode === "now") return now;
     var hm = S.time.hm.split(":"), d = new Date(now);
     d.setHours(+hm[0], +hm[1], 0, 0);
@@ -1846,7 +1881,7 @@
     return d;
   }
   function dayWord(d) {
-    var n = new Date(); var a = new Date(n.getFullYear(), n.getMonth(), n.getDate()), b = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var n = nowWib(); var a = new Date(n.getFullYear(), n.getMonth(), n.getDate()), b = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     var diff = Math.round((b - a) / 86400000);
     return diff === 0 ? "" : diff === 1 ? tl("besok ", "tomorrow ") : "";
   }
@@ -1863,7 +1898,7 @@
   function openTimeSheet() {
     var sh = $("#sheetTime"); sh.hidden = false;
     var mode = S.time.mode;
-    $("#inTime").value = S.time.mode === "now" ? clock(new Date()).replace(".", ":") : S.time.hm;
+    $("#inTime").value = S.time.mode === "now" ? clock(nowWib()).replace(".", ":") : S.time.hm;
     function paint() {
       $$("#timeMode button").forEach(function (b) { b.classList.toggle("is-on", b.dataset.m === mode); });
       $("#timeRow").style.opacity = mode === "now" ? ".4" : "1";
@@ -2166,7 +2201,7 @@
       else recenterBtn(false);
     }, 60);
 
-    var dep = S.dep || new Date(), t = 0;
+    var dep = S.dep || nowWib(), t = 0;
     var html = '<div class="trip-sum"><div class="big tnum">' + (it.min < 60 ? it.min + "<small>mnt</small>" : Math.floor(it.min / 60) + "<small>j</small> " + (it.min % 60) + "<small>mnt</small>") +
       '</div><div class="facts"><b class="tnum">' + fareText(it.fareLo, it.fareHi) + "</b><br>" + clock(dep) + " – " + clock(addMin(dep, it.min)) +
       (it.direct ? "" : " · " + (it.transfers ? transfersText(it.transfers) : tl("tanpa pindah", "no transfers"))) + "</div></div>";
@@ -2318,7 +2353,7 @@
   }
   function tripImage(it) {
     var W = 1080, P = 64, F = '"PJS", system-ui, sans-serif';
-    var dep = S.dep || new Date();
+    var dep = S.dep || nowWib();
     var c = document.createElement("canvas"), ctx = c.getContext("2d");
     // susun langkah dulu untuk menghitung tinggi
     var steps = [], t = 0;
@@ -2480,7 +2515,7 @@
     ready.then(go, go);
   }
   window.__lumiTripImage = function (i) { return tripImage(S.results[i]); };   // untuk pengujian
-  window.__lumiOpenTrip = function (it, f, t) { if (f) S.from = f; if (t) S.to = t; S.dep = S.dep || new Date(); S.results = [colorize(it)]; openTrip(it); };   // untuk pengujian
+  window.__lumiOpenTrip = function (it, f, t) { if (f) S.from = f; if (t) S.to = t; S.dep = S.dep || nowWib(); S.results = [colorize(it)]; openTrip(it); };   // untuk pengujian
 
   /* Pintasan dari app shortcut (tekan lama ikon) dan ubin Quick Settings. */
   window.__lumiShortcut = function (name) {
@@ -2858,8 +2893,8 @@
   function gtfsCardHTML(compact) {
     var updated = ROUTE_SRC.kind === "gtfs";
     return '<div class="gtfs-card"><b>' + (updated ? "Data rute: GTFS resmi Transjakarta" : "Perbarui rute Transjakarta") + "</b>" +
-      "<p>" + (updated ? tl("Diunduh " + esc(ROUTE_SRC.date) + " · " + ROUTE_SRC.count + " rute. Lumi memeriksa data resmi setiap hari dan memberi tahu bila ada rute yang berubah.",
-          "Downloaded " + esc(ROUTE_SRC.date) + " · " + ROUTE_SRC.count + " routes. Lumi checks the official data every day and tells you when a route changes.") :
+      "<p>" + (updated ? tl("Diunduh " + esc(ROUTE_SRC.date) + " · " + ROUTE_SRC.count + " rute. Lumi memeriksa data resmi secara berkala dan memberi tahu bila ada rute yang berubah.",
+          "Downloaded " + esc(ROUTE_SRC.date) + " · " + ROUTE_SRC.count + " routes. Lumi checks the official data regularly and tells you when a route changes.") :
         "Data bawaan memakai halte BRT 2024 dan rute non-BRT 2021, sehingga sebagian rute (mis. 9H, T31, P11) belum ada/sesuai. Lumi mengunduh GTFS resmi Transjakarta otomatis; tekan tombol di bawah bila belum berhasil.") + "</p>" +
       '<button class="btn-go gtfs-btn">' + (updated ? "Perbarui lagi" : "Unduh data rute resmi") + '</button><div class="gtfs-status"></div></div>';
   }
@@ -2915,7 +2950,11 @@
       var c = cfg(); c.lang = this.value === "en" ? "en" : "id"; store("cfg", c);
       try { NATIVE && NATIVE.setLang && NATIVE.setLang(c.lang); } catch (e) { }
       // Muat ulang halaman supaya semua layar (termasuk yang sudah dirender) ikut berganti bahasa.
-      try { sessionStorage.setItem("lumi:reopen", "lang"); } catch (e) { }
+      try {
+        sessionStorage.setItem("lumi:reopen", "lang");
+        // B9: rute yang sedang dicari ikut dipulihkan setelah muat ulang.
+        sessionStorage.setItem("lumi:reopenPlan", JSON.stringify({ from: S.from, to: S.to, time: S.time, results: !$("#results").hidden }));
+      } catch (e) { }
       location.reload();
     });
     var btnBackup = $("#btnBackup"), btnRestore = $("#btnRestore");
@@ -3070,7 +3109,7 @@
         '<ul class="ob-feats">' +
         '<li><span class="ob-ico">' + OB_ICO.route + '</span><div><b>Semua kombinasi rute</b><span>Tercepat, termurah, atau minim transit, lengkap dengan tarif dan waktu tiba.</span></div></li>' +
         '<li><span class="ob-ico">' + OB_ICO.nav + '</span><div><b>Pendampingan GPS</b><span>Tahu posisimu, sisa pemberhentian, dan diingatkan saat harus turun.</span></div></li>' +
-        '<li><span class="ob-ico">' + OB_ICO.bell + '</span><div><b>Rute selalu terbaru</b><span>Data resmi Transjakarta dicek tiap jam, kamu diberi tahu bila ada rute berubah.</span></div></li>' +
+        '<li><span class="ob-ico">' + OB_ICO.bell + '</span><div><b>Rute selalu terbaru</b><span>Data resmi Transjakarta dicek berkala, kamu diberi tahu bila ada rute berubah.</span></div></li>' +
         '</ul><div class="ob-bottom"><button class="ob-cta" id="obNext" type="button">Mulai</button>' +
         '<p class="ob-foot">Alamat dicari lewat Google Maps lalu dibagikan ke Lumi. Lokasimu hanya disimpan di HP ini.</p></div>';
       $("#obNext").addEventListener("click", function () { store("onboarded", 1); showOnboarding(2); });
@@ -3130,6 +3169,14 @@
   try {
     if (sessionStorage.getItem("lumi:reopen") === "lang") {
       sessionStorage.removeItem("lumi:reopen");
+      var rp0 = JSON.parse(sessionStorage.getItem("lumi:reopenPlan") || "null");
+      sessionStorage.removeItem("lumi:reopenPlan");
+      if (rp0) {
+        if (rp0.time) S.time = rp0.time;
+        if (rp0.from) setPoint("from", rp0.from);
+        if (rp0.to) setPoint("to", rp0.to);
+        if (rp0.results && S.from && S.to) setTimeout(runPlan, 50);
+      }
       if (store("onboarded") === 2) {
         openSettings();
         setTimeout(function () { var sel = $("#setLang"); if (sel) sel.closest(".set-card").scrollIntoView({ block: "center" }); toast(tl("Bahasa disetel ke Indonesia.", "Language set to English.")); }, 120);

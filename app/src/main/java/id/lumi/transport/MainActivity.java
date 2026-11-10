@@ -233,6 +233,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (watchWanted && watchL == null) watchStart();
         if (pageReady) js("window.__lumiPerm && __lumiPerm(); window.__lumiResume && __lumiResume()");   // kembali dari pengaturan HP
         updatePip(NavService.tracker != null);
         if (NavService.tracker != null) compassOn(true);
@@ -298,6 +299,7 @@ public class MainActivity extends Activity {
     protected void onStop() {
         super.onStop();
         stopped = true; stoppedAt = System.currentTimeMillis();
+        if (watchL != null) watchStop();   // watchWanted tetap: dilanjutkan di onResume
         if (Build.VERSION.SDK_INT >= 26 && !isChangingConfigurations() && wasPip && !isInPictureInPictureMode()
                 && System.currentTimeMillis() - pipExitAt < 3000) {
             closeFromPip();
@@ -366,6 +368,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         NavService.listener = null;
+        watchStop();
         compassOn(false);
         synchronized (liveLock) { if (live != null) { live.close(); live = null; } liveQueue.clear(); }
         // Aplikasi ditutup (bukan sekadar diputar/dibuat ulang) â†’ pendampingan ikut berhenti.
@@ -412,6 +415,12 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) { }
     }
 
+    /*
+     * v2.13.3 (B1): posisi yang dipakai harus segar dan dari GPS bila ada.
+     *  - Cache hanya dipakai bila umurnya < 20 detik DAN akurasinya <= 60 m (dulu: 3 menit, akurasi apa pun).
+     *  - GPS dan jaringan diminta bersamaan. Fix GPS langsung dipakai; fix jaringan hanya dipakai bila
+     *    GPS belum menjawab dalam 4 detik (di dalam gedung), atau sebagai cadangan saat batas 15 detik habis.
+     */
     @SuppressWarnings("MissingPermission")
     private void locateNow(final String id) {
         final LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -421,37 +430,94 @@ public class MainActivity extends Activity {
             Location l = lm.getLastKnownLocation(p);
             if (l != null && (best == null || l.getTime() > best.getTime())) best = l;
         }
-        if (best != null && System.currentTimeMillis() - best.getTime() < 3 * 60 * 1000) {
+        if (best != null && System.currentTimeMillis() - best.getTime() < 20 * 1000 && best.hasAccuracy() && best.getAccuracy() <= 60) {
             deliverLocation(id, best, null);
             return;
         }
+        final boolean gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        final boolean net = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
         final Location fallback = best;
-        String provider = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) ? LocationManager.NETWORK_PROVIDER
-                : lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ? LocationManager.GPS_PROVIDER : null;
-        if (provider == null) {
+        if (!gps && !net) {
             deliverLocation(id, fallback, Lang.t("Aktifkan GPS / Lokasi di pengaturan ponsel", "Turn on GPS / Location in your phone settings"));
             return;
         }
         final boolean[] done = {false};
-        final LocationListener listener = new LocationListener() {
+        final Location[] netFix = {null};
+        final LocationListener[] holder = new LocationListener[1];
+        holder[0] = new LocationListener() {
             @Override public void onLocationChanged(Location location) {
                 if (done[0]) return;
-                done[0] = true;
-                lm.removeUpdates(this);
-                deliverLocation(id, location, null);
+                if (LocationManager.GPS_PROVIDER.equals(location.getProvider()) || !gps) {
+                    done[0] = true;
+                    lm.removeUpdates(this);
+                    deliverLocation(id, location, null);
+                } else if (netFix[0] == null || location.getAccuracy() < netFix[0].getAccuracy()) {
+                    netFix[0] = location;
+                }
             }
             @Override public void onStatusChanged(String p, int s, Bundle b) { }
             @Override public void onProviderEnabled(String p) { }
             @Override public void onProviderDisabled(String p) { }
         };
-        lm.requestLocationUpdates(provider, 0, 0, listener, Looper.getMainLooper());
+        try {
+            if (gps) lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, holder[0], Looper.getMainLooper());
+            if (net) lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, holder[0], Looper.getMainLooper());
+        } catch (Exception e) {
+            deliverLocation(id, fallback, null);
+            return;
+        }
+        // GPS belum menjawab dalam 4 detik: pakai fix jaringan bila sudah ada.
+        main.postDelayed(new Runnable() { @Override public void run() {
+            if (done[0] || netFix[0] == null) return;
+            done[0] = true;
+            lm.removeUpdates(holder[0]);
+            deliverLocation(id, netFix[0], null);
+        }}, 4000);
         main.postDelayed(new Runnable() { @Override public void run() {
             if (done[0]) return;
             done[0] = true;
-            lm.removeUpdates(listener);
-            deliverLocation(id, fallback, Lang.t("Sinyal lokasi lemah, coba lagi di area terbuka", "Weak location signal, try again in an open area"));
+            lm.removeUpdates(holder[0]);
+            Location f = netFix[0] != null ? netFix[0] : fallback;
+            deliverLocation(id, f, f != null ? null : Lang.t("Sinyal lokasi lemah, coba lagi di area terbuka", "Weak location signal, try again in an open area"));
         }}, 15000);
     }
+
+    /*
+     * Pelacakan terus-menerus untuk layar "Bus di sekitarmu" (B1): GPS tiap 2 detik / 3 meter,
+     * dikirim ke window.__lumiPos(lat, lon, acc). Dihentikan saat layar ditutup atau aplikasi ke latar.
+     */
+    private LocationListener watchL;
+    @SuppressWarnings("MissingPermission")
+    private void watchStart() {
+        watchStop();
+        if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) return;
+        final LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if (lm == null) return;
+        final boolean gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        watchL = new LocationListener() {
+            private long lastGps = 0;
+            @Override public void onLocationChanged(Location l) {
+                boolean isGps = LocationManager.GPS_PROVIDER.equals(l.getProvider());
+                if (isGps) lastGps = System.currentTimeMillis();
+                else if (gps && System.currentTimeMillis() - lastGps < 10000) return;   // GPS masih jalan: abaikan jaringan
+                js("window.__lumiPos && __lumiPos(" + l.getLatitude() + "," + l.getLongitude() + "," + (l.hasAccuracy() ? l.getAccuracy() : -1) + ")");
+            }
+            @Override public void onStatusChanged(String p, int s, Bundle b) { }
+            @Override public void onProviderEnabled(String p) { }
+            @Override public void onProviderDisabled(String p) { }
+        };
+        try {
+            if (gps) lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 3, watchL, Looper.getMainLooper());
+            if (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 10, watchL, Looper.getMainLooper());
+        } catch (Exception ignored) { watchL = null; }
+    }
+    private void watchStop() {
+        if (watchL == null) return;
+        try { ((LocationManager) getSystemService(LOCATION_SERVICE)).removeUpdates(watchL); } catch (Exception ignored) { }
+        watchL = null;
+    }
+    private boolean watchWanted;
 
     @Override
     public void onRequestPermissionsResult(int code, String[] perms, int[] results) {
@@ -611,7 +677,7 @@ public class MainActivity extends Activity {
             httpH(id, url, null);
         }
 
-        /** HTTP GET dengan header tambahan (JSON objek), mis. Authorization untuk CARTO. */
+        /** HTTP GET dengan header tambahan (JSON objek), mis. token tamu untuk API Transjakarta. */
         @JavascriptInterface
         public void httpH(final String id, final String url, final String headersJson) {
             pool.execute(new Runnable() { @Override public void run() {
@@ -749,6 +815,12 @@ public class MainActivity extends Activity {
                     locateNow(id);
                 }
             }});
+        }
+
+        /** Pelacakan posisi terus-menerus (layar bus langsung): true = mulai, false = berhenti. */
+        @JavascriptInterface
+        public void watchPos(final boolean on) {
+            main.post(new Runnable() { @Override public void run() { watchWanted = on; if (on) watchStart(); else watchStop(); }});
         }
 
         /** Buka aplikasi berdasarkan nama paket; jika tidak terpasang, buka Play Store. */

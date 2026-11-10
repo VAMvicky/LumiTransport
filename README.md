@@ -32,7 +32,7 @@
 | 🎯 **Filter yang kamu mau** | Urutkan Tercepat, Termurah, atau Minim transit, lalu pilih moda: hanya yang **mengandung TJ**, atau TJ + LRT, dan seterusnya. |
 | 🚌 **Posisi bus langsung** | **Bus di sekitarmu** menampilkan posisi Transjakarta, Mikrotrans, Royaltrans, dan Transjabodetabek saat ini di peta. Di detail perjalanan ada perkiraan **bus berikutnya tiba di halte naik**, dan di detail rute ada semua bus rute itu. |
 | 🧭 **Pendampingan GPS** | Tahu posisimu di peta, **sisa pemberhentian**, dan HP bergetar saat **"Siap-siap turun"** dan **"Turun sekarang"**, juga saat layar mati. |
-| 🔔 **Tahu kalau rute berubah** | Data resmi Transjakarta **dicek tiap jam**. Begitu ada rute baru, rute dihapus, atau halte berubah, kamu dapat **notifikasi**. |
+| 🔔 **Tahu kalau rute berubah** | Data resmi Transjakarta **dicek berkala**. Begitu ada rute baru, rute dihapus, atau halte berubah, kamu dapat **notifikasi**. |
 | 🖼️ **Bagikan sebagai gambar** | Setiap rute bisa dibagikan sebagai **gambar rapi** ke WhatsApp, IG, atau mana saja. |
 | 💸 **Tarif yang benar** | Pindah di dalam halte = tidak bayar lagi. Turun di luar halte = tap ulang. Termasuk tarif SH2, Hub Connector, MRT per stasiun, KA Bandara. |
 | 🌙 **Sadar jam operasional** | Pukul 00.00? Lumi hanya memakai layanan 24 jam (AMARI koridor 1–14, JAK36/47/52/75) dan ojol. |
@@ -107,7 +107,7 @@
 **🔔 Rute selalu terbaru**
 - Saat pertama dibuka, Lumi mengunduh **GTFS resmi Transjakarta** dan memprosesnya di HP
 - **Tiap jam** (latar belakang, sangat hemat kuota) Lumi mengecek:
-  1. umpan perubahan rute dari repo ini (`data/route_changes.json`), yang diperbarui GitHub Actions tiap jam, dan
+  1. umpan perubahan rute dari repo ini (`data/route_changes.json`), yang diperbarui GitHub Actions beberapa kali sehari (dijadwalkan tiap jam, tetapi GitHub sering menunda jadwal hingga beberapa jam), dan
   2. tanda versi file GTFS resmi (ETag / Last-Modified / ukuran)
 - Bila ada yang berubah, data rute diunduh ulang, perbedaannya dihitung (rute baru, dihapus, halte bertambah/berkurang, pola varian berubah), lalu muncul **notifikasi**
 - Riwayat perubahan ada di Beranda dan **Pengaturan → Perubahan rute**
@@ -237,7 +237,7 @@ Pastikan izin notifikasi aktif dan **Berjalan di latar belakang** sudah diizinka
 <details>
 <summary><b>Seberapa cepat Lumi tahu ada rute berubah?</b></summary>
 
-Paling lama sekitar **1 jam** setelah Transjakarta memperbarui data GTFS resminya. GitHub Actions di repo ini mengecek GTFS tiap jam, dan aplikasi juga mengecek sendiri tanda versi file GTFS tiap jam. Perubahan yang hanya diumumkan di media sosial (mis. pengalihan sementara) baru tercatat setelah masuk ke data resmi.
+Biasanya dalam beberapa jam setelah Transjakarta memperbarui data GTFS resminya. Aplikasi mengecek sendiri tanda versi file GTFS sekitar tiap jam saat ada internet (Android bisa menundanya saat mode hemat daya), dan GitHub Actions di repo ini mengecek GTFS beberapa kali sehari. Perubahan yang hanya diumumkan di media sosial (mis. pengalihan sementara) baru tercatat setelah masuk ke data resmi.
 </details>
 
 <details>
@@ -279,8 +279,8 @@ Tarif adalah perkiraan berdasarkan aturan yang diumumkan (lihat [Tarif yang dipa
 | Peta | **Leaflet** + **MapLibre GL** (maplibre-gl-leaflet) dengan ubin vektor **OpenFreeMap** (OpenStreetMap); cadangan ubin OSM standar |
 | Mesin rute | Graf multimoda + Dijkstra + enumerasi kombinasi (`engine.js`), berjalan offline |
 | Data rute | GTFS resmi Transjakarta (diproses di HP oleh `GtfsImporter.java`) |
-| Latar belakang | Foreground service (pendampingan GPS), JobScheduler (cek rute tiap jam & harian) |
-| CI/CD | GitHub Actions: build APK tiap push & pantau perubahan rute tiap jam |
+| Latar belakang | Foreground service (pendampingan GPS), JobScheduler (cek rute berkala & harian) |
+| CI/CD | GitHub Actions: build APK tiap push & pantau perubahan rute berkala |
 
 ### 📁 Struktur proyek
 ```
@@ -293,7 +293,7 @@ app/src/main/
 │   ├── GtfsImporter.java     # Unduh & ringkas GTFS resmi di HP
 │   ├── RouteUpdater.java     # Perbarui data rute + catat perubahan
 │   ├── RouteDiff.java        # Bandingkan rute lama vs baru
-│   ├── RouteWatchJob.java    # Cek perubahan tiap jam
+│   ├── RouteWatchJob.java    # Cek perubahan berkala (±tiap jam)
 │   ├── RouteUpdateJob.java   # Pembaruan harian
 │   ├── Lang.java             # Bahasa teks native (notifikasi, pendampingan, suara)
 │   └── ShareProvider.java    # Berbagi gambar rute tanpa izin penyimpanan
@@ -333,7 +333,7 @@ Folder ini juga punya `build.gradle` bila ingin membuka di Android Studio.
 > 🔐 Build rilis ditandatangani dengan kunci yang disimpan di **GitHub Actions Secrets** (`LUMI_KEYSTORE_BASE64`, `LUMI_KEYSTORE_PASSWORD`, opsional `LUMI_KEY_ALIAS`). Kunci tidak pernah disimpan di repo. Tanpa secrets, workflow tetap mem-build APK (sebagai artifact) tetapi tidak menerbitkan rilis.
 
 ### 🔔 Pemantau perubahan rute
-Workflow [`route-watch.yml`](.github/workflows/route-watch.yml) berjalan tiap jam: mengunduh GTFS resmi, membandingkan ringkasan rute dengan `data/route_index.txt`, lalu menulis `data/route_changes.json` bila ada perubahan. Aplikasi membaca file kecil ini tiap jam lewat `raw.githubusercontent.com`.
+Workflow [`route-watch.yml`](.github/workflows/route-watch.yml) dijadwalkan tiap jam (dalam praktik GitHub menjalankannya beberapa kali sehari): mengunduh GTFS resmi, membandingkan ringkasan rute dengan `data/route_index.txt`, lalu menulis `data/route_changes.json` bila ada perubahan. Aplikasi membaca file kecil ini secara berkala lewat `raw.githubusercontent.com`.
 
 ---
 

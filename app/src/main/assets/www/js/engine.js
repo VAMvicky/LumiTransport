@@ -419,7 +419,9 @@
     return summarize(legs, opts.depMin == null ? nowMin() : opts.depMin, this.isHalte.bind(this), this.dow);
   };
 
-  function nowMin() { var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+  /* Jam dinding WIB (UTC+7, tanpa DST) apa pun zona waktu HP: getHours()/getDay() objek ini = WIB. */
+  function nowWib() { var d = new Date(); return new Date(d.getTime() + (d.getTimezoneOffset() + 420) * 60000); }
+  function nowMin() { var d = nowWib(); return d.getHours() * 60 + d.getMinutes(); }
 
   /* Tarif Transjakarta: Rp3.500 sekali tap masuk (Rp2.000 pukul 05.00–07.00). Pindah rute GRATIS selama
      penumpang tidak keluar halte (turun & naik lagi di halte yang sama). Bila turun di luar halte
@@ -483,7 +485,7 @@
 
   Planner.prototype.plan = function (from, to, roadKm, depMin, dow) {
     var self = this;
-    this.dow = dow == null ? new Date().getDay() : dow;   // hari (0 = Minggu) untuk tarif yang bergantung hari
+    this.dow = dow == null ? nowWib().getDay() : dow;   // hari (0 = Minggu) untuk tarif yang bergantung hari
     PLAN_DOW = this.dow;
     if (depMin == null) depMin = nowMin();
     var directKm = hav(from, to);
