@@ -63,9 +63,17 @@ android {
         noCompress "woff2"
     }
 
+    // R3: lint dijalankan di CI (lintRelease) dan menggagalkan build untuk temuan BARU.
+    // Temuan lama dicatat di lint-baseline.xml; kurangi isinya sedikit demi sedikit.
     lint {
-        checkReleaseBuilds false
-        abortOnError false
+        checkReleaseBuilds false          // lint jalan sebagai langkah CI tersendiri, bukan di tiap assemble
+        abortOnError true
+        warningsAsErrors true             // peringatan baru pun menggagalkan CI
+        baseline = file("lint-baseline.xml")
+        textReport true
+        textOutput file("build/reports/lint-results-release.txt")
+        fatal "NewApi", "MissingPermission", "JavascriptInterface", "AddJavascriptInterface"
+        disable "GradleDependency", "OldTargetApi", "NewerVersionAvailable", "AndroidGradlePluginVersion"
     }
 }
 

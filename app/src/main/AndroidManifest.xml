@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="id.lumi.transport">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- minSdk/targetSdk/versi diisi oleh build.sh (dari release-notes/CURRENT) atau build.gradle. -->
-    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="34" />
-
+    <!-- minSdk/targetSdk/versi/namespace diisi oleh app/build.gradle (versi dari release-notes/CURRENT). -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

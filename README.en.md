@@ -254,21 +254,18 @@ Fares are estimates based on published rules (see [Fares used](#-fares-used)). P
 | CI/CD | GitHub Actions: build the APK on every push and watch for route changes regularly |
 
 ### 🏗️ Build from source
-Lumi builds **without Gradle**, using `aapt2`, `ecj`, `d8` and `apksigner`:
+The APK is built with **Gradle** (R8 + resource shrinking), exactly like the released one:
 
 ```bash
 git clone https://github.com/VAMvicky/LumiTransport.git
 cd LumiTransport
-export ANDROID_JAR=$ANDROID_HOME/platforms/android-34/android.jar
-export AAPT2=$ANDROID_HOME/build-tools/34.0.0/aapt2
-export D8_JAR=$ANDROID_HOME/build-tools/34.0.0/lib/d8.jar
-export APKSIGNER_JAR=$ANDROID_HOME/build-tools/34.0.0/lib/apksigner.jar
-export ECJ_JAR=/path/to/ecj.jar          # org.eclipse.jdt:ecj
-./build.sh                                # output: build/LumiTransport-v2.0.apk
+./gradlew assembleRelease lintRelease     # output: app/build/outputs/apk/release/
 node tools/test_engine.js                 # routing engine tests
+pip install playwright && python3 tools/ui_check.py en native   # all screens + English translation check
 ```
+Or open this folder in Android Studio. Requires JDK 17, Android SDK 35 and `python3` (to build the route data).
 
-> 🔐 Release builds are signed with a key stored in **GitHub Actions Secrets** (`LUMI_KEYSTORE_BASE64`, `LUMI_KEYSTORE_PASSWORD`, optional `LUMI_KEY_ALIAS`). The key is never stored in the repo. Without secrets, the workflow still builds the APK as an artifact but doesn't publish a release.
+> 🔐 Release builds are signed with a key stored in **GitHub Actions Secrets** (`LUMI_KEYSTORE_BASE64`, `LUMI_KEYSTORE_PASSWORD`, optional `LUMI_KEY_ALIAS`). The key is never stored in the repo. Without secrets, the workflow still builds the APK as an artifact (debug key) and **refuses** to publish a release.
 
 ---
 

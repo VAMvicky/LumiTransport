@@ -309,28 +309,23 @@ tools/
 ├── build_data.py             # data-raw → data.js
 ├── route_watch.py            # Pemantau perubahan rute (GitHub Actions)
 ├── test_engine.js            # Uji mesin rute
-└── zipalign.py
-build.sh                      # Build APK tanpa Gradle
+├── ui_check.py               # Uji semua layar + terjemahan Inggris (Chrome headless)
+└── smoke.sh                  # Uji asap APK di emulator
 ```
 
 ### 🏗️ Build dari kode sumber
-Lumi dibangun **tanpa Gradle** memakai `aapt2`, `ecj`, `d8`, dan `apksigner`:
+APK dibangun lewat **Gradle** (R8 + penyusutan resource), sama persis dengan yang dirilis:
 
 ```bash
 git clone https://github.com/VAMvicky/LumiTransport.git
 cd LumiTransport
-# isi variabel berikut (atau taruh file-nya di tools/sdk/)
-export ANDROID_JAR=$ANDROID_HOME/platforms/android-34/android.jar
-export AAPT2=$ANDROID_HOME/build-tools/34.0.0/aapt2
-export D8_JAR=$ANDROID_HOME/build-tools/34.0.0/lib/d8.jar
-export APKSIGNER_JAR=$ANDROID_HOME/build-tools/34.0.0/lib/apksigner.jar
-export ECJ_JAR=/path/ke/ecj.jar          # org.eclipse.jdt:ecj
-./build.sh                                # hasil: build/LumiTransport-v2.0.apk
+./gradlew assembleRelease lintRelease     # hasil: app/build/outputs/apk/release/
 node tools/test_engine.js                 # uji mesin rute
+pip install playwright && python3 tools/ui_check.py en native   # uji semua layar + terjemahan
 ```
-Folder ini juga punya `build.gradle` bila ingin membuka di Android Studio.
+Atau buka folder ini di Android Studio. Butuh JDK 17, Android SDK 35, dan `python3` (untuk membangun data rute).
 
-> 🔐 Build rilis ditandatangani dengan kunci yang disimpan di **GitHub Actions Secrets** (`LUMI_KEYSTORE_BASE64`, `LUMI_KEYSTORE_PASSWORD`, opsional `LUMI_KEY_ALIAS`). Kunci tidak pernah disimpan di repo. Tanpa secrets, workflow tetap mem-build APK (sebagai artifact) tetapi tidak menerbitkan rilis.
+> 🔐 Build rilis ditandatangani dengan kunci yang disimpan di **GitHub Actions Secrets** (`LUMI_KEYSTORE_BASE64`, `LUMI_KEYSTORE_PASSWORD`, opsional `LUMI_KEY_ALIAS`). Kunci tidak pernah disimpan di repo. Tanpa secrets, workflow tetap mem-build APK (sebagai artifact, kunci debug) dan **menolak** menerbitkan rilis.
 
 ### 🔔 Pemantau perubahan rute
 Workflow [`route-watch.yml`](.github/workflows/route-watch.yml) dijadwalkan tiap jam (dalam praktik GitHub menjalankannya beberapa kali sehari): mengunduh GTFS resmi, membandingkan ringkasan rute dengan `data/route_index.txt`, lalu menulis `data/route_changes.json` bila ada perubahan. Aplikasi membaca file kecil ini secara berkala lewat `raw.githubusercontent.com`.

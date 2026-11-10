@@ -42,7 +42,7 @@ public class NavService extends Service {
         lastJson = null;
         Intent i = new Intent(ctx, NavService.class);
         i.putExtra("title", title);
-        if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i); else ctx.startService(i);
+        ctx.startForegroundService(i);
     }
 
     public static void stop(Context ctx) {
@@ -52,7 +52,6 @@ public class NavService extends Service {
     }
 
     static void channels(Context ctx) {
-        if (Build.VERSION.SDK_INT < 26) return;
         NotificationManager nm = (NotificationManager) ctx.getSystemService(NOTIFICATION_SERVICE);
         Lang.ensure(ctx);
         NotificationChannel a = new NotificationChannel(CH_GUIDE, Lang.t("Pendampingan perjalanan", "Trip guidance"), NotificationManager.IMPORTANCE_LOW);
@@ -80,7 +79,7 @@ public class NavService extends Service {
 
     @SuppressWarnings("deprecation")
     private Notification build(String title, String text) {
-        Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CH_GUIDE) : new Notification.Builder(this);
+        Notification.Builder b = new Notification.Builder(this, CH_GUIDE);
         b.setSmallIcon(android.R.drawable.ic_menu_mylocation)
                 .setContentTitle(title).setContentText(text)
                 .setStyle(new Notification.BigTextStyle().bigText(text))
@@ -93,7 +92,7 @@ public class NavService extends Service {
 
     @SuppressWarnings("deprecation")
     private void alert(String text) {
-        Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CH_ALERT) : new Notification.Builder(this);
+        Notification.Builder b = new Notification.Builder(this, CH_ALERT);
         b.setSmallIcon(android.R.drawable.ic_dialog_alert).setContentTitle(Lang.t("Lumi · Pendampingan", "Lumi · Guidance")).setContentText(text)
                 .setStyle(new Notification.BigTextStyle().bigText(text))
                 .setAutoCancel(true).setColor(0xFF1565D8).setContentIntent(openApp())
@@ -102,8 +101,7 @@ public class NavService extends Service {
         try {
             Vibrator v = (Vibrator) getSystemService(VIBRATOR_SERVICE);
             if (v != null) {
-                if (Build.VERSION.SDK_INT >= 26) v.vibrate(VibrationEffect.createWaveform(new long[]{0, 400, 200, 400, 200, 600}, -1));
-                else v.vibrate(new long[]{0, 400, 200, 400, 200, 600}, -1);
+                v.vibrate(VibrationEffect.createWaveform(new long[]{0, 400, 200, 400, 200, 600}, -1));
             }
         } catch (Exception ignored) { }
     }

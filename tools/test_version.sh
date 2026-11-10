@@ -24,7 +24,7 @@ check 2.1.1 2.1.1 20101
 check 2.10  2.10  21000
 check v2.2  2.2   20200
 
-# CURRENT harus valid dan konsisten dengan build.sh (yang memakai skrip yang sama).
+# CURRENT harus valid dan konsisten dengan app/build.gradle (yang membaca file yang sama).
 out=$(bash tools/version.sh)
 ver=${out% *}
 code=${out#* }
