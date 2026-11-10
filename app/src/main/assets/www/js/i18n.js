@@ -15,7 +15,7 @@
     var c = JSON.parse(localStorage.getItem("lumi:cfg") || "null");
     if (c && (c.lang === "en" || c.lang === "id")) lang = c.lang;
     else lang = (navigator.language || "id").toLowerCase().indexOf("id") === 0 ? "id" : "en";
-  } catch (e) { }
+  } catch (e) { lumiLog(e); }
   var EN = lang === "en";
 
   /* ------------------------------------------------------------ kamus: teks utuh */
@@ -403,6 +403,6 @@
 
   root.LumiI18n = { lang: lang, en: EN, t: t, L: L, start: start, diff: function (s) { return EN ? diffText(s) : s; } };
   // Bagian native (notifikasi, suara, pendampingan) mengikuti bahasa yang sama.
-  try { if (root.LumiNative && root.LumiNative.setLang) root.LumiNative.setLang(lang); } catch (e) { }
+  try { if (root.LumiNative && root.LumiNative.setLang) root.LumiNative.setLang(lang); } catch (e) { lumiLog(e); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })(window);

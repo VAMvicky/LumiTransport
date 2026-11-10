@@ -41,9 +41,9 @@
   var statusFns = [];
   var state = "idle", lastMsgAt = 0, lastError = "", phase = "", bytesWeb = 0, gotData = false;
   var allMode = false;
-  try { allMode = localStorage.getItem("lumi:liveAll") === "1"; } catch (e) { }
+  try { allMode = localStorage.getItem("lumi:liveAll") === "1"; } catch (e) { lumiLog(e); }
 
-  function setState(s) { state = s; statusFns.forEach(function (f) { try { f(s); } catch (e) { } }); }
+  function setState(s) { state = s; statusFns.forEach(function (f) { try { f(s); } catch (e) { lumiLog(e); } }); }
   function send(u8) {
     if (ws === "native") { var n = NATIVE(); if (n) n.liveSend(b64(u8)); return; }
     if (ws && ws.readyState === 1) ws.send(u8);
@@ -97,7 +97,7 @@
         try { msg = JSON.parse(dec.decode(body.subarray(p))); } catch (e) { continue; }
         lastMsgAt = Date.now(); gotData = true; phase = "data";
         var rc = norm(msg.route_code || topic.split("/")[3]);
-        watchers.forEach(function (w) { if (w.want[rc]) { try { w.fn(msg, topic); } catch (e) { } } });
+        watchers.forEach(function (w) { if (w.want[rc]) { try { w.fn(msg, topic); } catch (e) { lumiLog(e); } } });
       }
     }
   }
@@ -120,7 +120,7 @@
     // Server memutus setelah langganan per rute (belum ada data) → pakai topik umum seperti klien publik lain.
     if (ph === "sub" && !gotData && !allMode) {
       allMode = true;
-      try { localStorage.setItem("lumi:liveAll", "1"); } catch (e) { }
+      try { localStorage.setItem("lumi:liveAll", "1"); } catch (e) { lumiLog(e); }
       retryMs = 500;
     }
     if (watchers.length) { setState("reconnecting"); scheduleRetry(); } else setState("idle");
@@ -141,8 +141,8 @@
   function disconnect() {
     clearTimeout(retryT);
     if (ws) {
-      try { send(new Uint8Array([0xE0, 0])); } catch (e) { }
-      if (ws === "native") { var n = NATIVE(); if (n) n.liveClose(); } else { try { ws.close(); } catch (e) { } }
+      try { send(new Uint8Array([0xE0, 0])); } catch (e) { lumiLog(e); }
+      if (ws === "native") { var n = NATIVE(); if (n) n.liveClose(); } else { try { ws.close(); } catch (e) { lumiLog(e); } }
     }
     ws = null; connected = false; active = {}; clearInterval(pingT); setState("idle");
   }
@@ -206,11 +206,11 @@
 
   function devId() {
     var d = null;
-    try { d = localStorage.getItem(DEV_KEY); } catch (e) { }
+    try { d = localStorage.getItem(DEV_KEY); } catch (e) { lumiLog(e); }
     if (!d) {
       d = "";
       for (var i = 0; i < 16; i++) d += "0123456789abcdef".charAt(Math.floor(Math.random() * 16));
-      try { localStorage.setItem(DEV_KEY, d); } catch (e) { }
+      try { localStorage.setItem(DEV_KEY, d); } catch (e) { lumiLog(e); }
     }
     return d;
   }
@@ -264,7 +264,7 @@
     var now = Math.floor(Date.now() / 1000);
     if (tok && tokExp - 120 > now) return Promise.resolve(tok);
     if (!tok) {
-      try { tok = localStorage.getItem(TOK_KEY); tokExp = +localStorage.getItem(EXP_KEY) || 0; } catch (e) { }
+      try { tok = localStorage.getItem(TOK_KEY); tokExp = +localStorage.getItem(EXP_KEY) || 0; } catch (e) { lumiLog(e); }
       if (tok && tokExp - 120 > now) return Promise.resolve(tok);
     }
     if (tokPromise) return tokPromise;
@@ -274,14 +274,14 @@
         if (!j || !j.token) throw new Error(lt("token tamu kosong", "empty guest token"));
         tok = j.token;
         tokExp = jwtExp(tok) || now + 3600;
-        try { localStorage.setItem(TOK_KEY, tok); localStorage.setItem(EXP_KEY, String(tokExp)); } catch (e) { }
+        try { localStorage.setItem(TOK_KEY, tok); localStorage.setItem(EXP_KEY, String(tokExp)); } catch (e) { lumiLog(e); }
         return tok;
       });
     tokPromise.then(function () { tokPromise = null; }, function () { tokPromise = null; });
     return tokPromise;
   }
 
-  function forgetToken() { tok = null; tokExp = 0; try { localStorage.removeItem(TOK_KEY); localStorage.removeItem(EXP_KEY); } catch (e) { } }
+  function forgetToken() { tok = null; tokExp = 0; try { localStorage.removeItem(TOK_KEY); localStorage.removeItem(EXP_KEY); } catch (e) { lumiLog(e); } }
 
   function apiGet(path, retry) {
     return token().then(function (t) {
@@ -375,10 +375,10 @@
 
   function notify(title, text) {
     var n = root.LumiNative;
-    if (n && n.busNotify) { try { n.busNotify(title, text); return "native"; } catch (e) { } }
+    if (n && n.busNotify) { try { n.busNotify(title, text); return "native"; } catch (e) { lumiLog(e); } }
     try {
       if (root.Notification && root.Notification.permission === "granted") { new root.Notification(title, { body: text }); return "web"; }
-    } catch (e) { }
+    } catch (e) { lumiLog(e); }
     return null;
   }
 

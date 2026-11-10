@@ -35,8 +35,8 @@
   }
   (function mergeOfficial() {
     var raw = null;
-    try { raw = window.LumiNative && window.LumiNative.getRouteData && window.LumiNative.getRouteData(); } catch (e) { }
-    if (!raw) { try { raw = localStorage.getItem("lumi:gtfsTest"); } catch (e) { } }   // untuk uji di browser
+    try { raw = window.LumiNative && window.LumiNative.getRouteData && window.LumiNative.getRouteData(); } catch (e) { lumiLog(e); }
+    if (!raw) { try { raw = localStorage.getItem("lumi:gtfsTest"); } catch (e) { lumiLog(e); } }   // untuk uji di browser
     if (!raw) return;
     var g; try { g = JSON.parse(raw); } catch (e) { return; }
     if (!g || !g.lines || !g.lines.length) return;
@@ -151,7 +151,7 @@
    */
   (function applyStopFix() {
     var F = window.LUMI_STOPFIX;
-    try { var c = JSON.parse(localStorage.getItem("lumi:stopfix") || "null"); if (c && c.fix && (!F || c.date > F.date)) F = c; } catch (e) { }
+    try { var c = JSON.parse(localStorage.getItem("lumi:stopfix") || "null"); if (c && c.fix && (!F || c.date > F.date)) F = c; } catch (e) { lumiLog(e); }
     if (!F || !F.fix || F.v !== 2) return;
     var n = 0;
     DATA.lines.forEach(function (l) {
@@ -169,7 +169,7 @@
   })();
   var planner = new E.Planner(DATA);
   // B10: kait uji hanya aktif di browser (bukan aplikasi Android) atau bila localStorage "lumi:debug" = "1".
-  var DEBUG = !window.LumiNative; try { if (localStorage.getItem("lumi:debug") === "1") DEBUG = true; } catch (e) { }
+  var DEBUG = !window.LumiNative; try { if (localStorage.getItem("lumi:debug") === "1") DEBUG = true; } catch (e) { lumiLog(e); }
   if (DEBUG) window.__lumiDebug = { planner: planner, data: DATA, src: function () { return ROUTE_SRC; }, tripZoom: function () { return tripMap ? tripMap.getZoom() : -1; }, liveWalk: function () { return LIVEW; }, busEta: function (b, l, p, f) { return busEta(b, l, p, f); }, routeEta: function (b, l, p) { return routeEta(b, l, p); }, dynKm: function () { return (GT.trip.dyn || []).map(function (d) { return pathKm(d.lines[1].getLatLngs().map(function (q) { return [q.lat, q.lng]; })); }); } };   // untuk pengujian
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -246,14 +246,14 @@
       r.setProperty("--safe-t", Math.max(0, +top || 0) + "px");
       r.setProperty("--safe-b", Math.max(0, +bottom || 0) + "px");
       de.classList.toggle("kb-open", !!ime);
-    } catch (e) { }
+    } catch (e) { lumiLog(e); }
   };
   try {
     if (window.LumiNative && window.LumiNative.insets) {
       var in0 = JSON.parse(window.LumiNative.insets());
       window.__lumiInsets(in0.top, in0.bottom, in0.ime);
     }
-  } catch (e) { }
+  } catch (e) { lumiLog(e); }
   function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem("lumi:" + k)); localStorage.setItem("lumi:" + k, JSON.stringify(v)); } catch (e) { return null; } }
 
   /* ------------------------------------------------------- riwayat perjalanan */
@@ -272,7 +272,7 @@
       });
       list.unshift({ key: key, ts: now, from: S.from.name || "", to: S.to.name || "", mins: it.min || 0, fare: it.fareLo || 0, modes: modes.join(" + ") });
       store("trips", list.slice(0, 50));
-    } catch (e) { }
+    } catch (e) { lumiLog(e); }
   }
   function historyCardHTML() {
     var list = trips();
@@ -407,7 +407,7 @@
       NATIVE.share(tl("Lumi Transport — cadangan data", "Lumi Transport — data backup") + "\n\n" + txt);
       toast("Cadangan dibagikan · simpan ke file atau catatan");
     } else {
-      try { window.prompt(tl("Salin cadangan ini:", "Copy this backup:"), txt); } catch (e) { }
+      try { window.prompt(tl("Salin cadangan ini:", "Copy this backup:"), txt); } catch (e) { lumiLog(e); }
     }
   }
   function doRestore() {
@@ -536,7 +536,7 @@
   function ensureGps() {
     return new Promise(function (resolve, reject) {
       if (!gpsOff()) { resolve(); return; }
-      if (gpsWait) { try { gpsWait.reject(new Error(tl("GPS belum aktif", "GPS is off"))); } catch (e) { } }
+      if (gpsWait) { try { gpsWait.reject(new Error(tl("GPS belum aktif", "GPS is off"))); } catch (e) { lumiLog(e); } }
       gpsWait = { resolve: resolve, reject: reject };
       closeGpsAsk();
       var m = document.createElement("div"); m.id = "gpsAsk"; m.className = "gps-ask"; m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true");
@@ -570,7 +570,7 @@
             m.invalidateSize(false);
             if (glLost(m)) { m.removeLayer(m._lumiTiles); m._lumiTiles = baseLayer().addTo(m); }
             else if (m._lumiTiles && m._lumiTiles.getMaplibreMap) { var g = m._lumiTiles.getMaplibreMap(); g.resize(); g.triggerRepaint(); }
-          } catch (e) { }
+          } catch (e) { lumiLog(e); }
         });
         [GT.trip, GT.pip].forEach(function (T) { T.sig = null; });
         paintGuideMap(S.guideSt);
@@ -903,7 +903,7 @@
               .filter(function (b) { return nearBoard.filter() && LumiLive.norm(b.code) === nearBoard.filter() && E.hav(me0(), [b.lat, b.lon]) <= 3; });
             if (vis.length) {
               follow = false;
-              try { liveMap.fitBounds(L.latLngBounds(vis.map(function (b) { return [b.lat, b.lon]; }).concat([me0()])), { padding: [40, 40], maxZoom: 16 }); } catch (e) { }
+              try { liveMap.fitBounds(L.latLngBounds(vis.map(function (b) { return [b.lat, b.lon]; }).concat([me0()])), { padding: [40, 40], maxZoom: 16 }); } catch (e) { lumiLog(e); }
             }
           });
         });
@@ -956,7 +956,7 @@
       compass(true); LIVE_HEADING.map = liveMap;
       nearBoard.onStop = function () {
         alive = false; clearTimeout(gT); LIVE_HEADING.map = null;
-        if (native) { try { NATIVE.watchPos(false); } catch (e) { } window.__lumiPos = null; }
+        if (native) { try { NATIVE.watchPos(false); } catch (e) { lumiLog(e); } window.__lumiPos = null; }
         if (!S.guide) compass(false);
       };
       stopWhenHidden(sheet, nearBoard);
@@ -972,7 +972,7 @@
   /* ------------------------------------------------------- info perubahan rute */
   function getChanges() {
     var raw = null;
-    try { raw = NATIVE && NATIVE.getChanges ? NATIVE.getChanges() : localStorage.getItem("lumi:changesTest"); } catch (e) { }
+    try { raw = NATIVE && NATIVE.getChanges ? NATIVE.getChanges() : localStorage.getItem("lumi:changesTest"); } catch (e) { lumiLog(e); }
     try { return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
   }
   function fmtDate(d) {
@@ -1125,7 +1125,7 @@
       tl("Hasil pengecekan data resmi " + esc(fmtDate(e.date)) + ". Lumi sudah memakai rute terbaru.", "From the official data check on " + esc(fmtDate(e.date)) + ". Lumi is already using the latest routes.") + "</p>" +
       changeItems(e.items, 5, e.date) + '<div class="chg-actions"><button class="btn-sec" id="chgAll">Semua perubahan</button><button class="btn-sec" id="chgOk">Oke, mengerti</button></div></div>';
     bindChangeLinks(el);
-    $("#chgOk").addEventListener("click", function () { try { NATIVE && NATIVE.markChangesSeen && NATIVE.markChangesSeen(); } catch (x) { } el.innerHTML = ""; });
+    $("#chgOk").addEventListener("click", function () { try { NATIVE && NATIVE.markChangesSeen && NATIVE.markChangesSeen(); } catch (x) { lumiLog(x); } el.innerHTML = ""; });
     $("#chgAll").addEventListener("click", function () { openSettings(); setTimeout(function () { var h = $("#chgHistory"); if (h) h.scrollIntoView(); }, 50); });
   }
   function changesHistoryHTML() {
@@ -1177,8 +1177,8 @@
     if ($("#btnGuide")) $("#btnGuide").innerHTML = ICO_NAV + "Pendampingan sedang berjalan";
   }
   function stopGuide() {
-    try { NATIVE && NATIVE.stopGuide && NATIVE.stopGuide(); } catch (e) { }
-    try { NATIVE && NATIVE.stopSpeak && NATIVE.stopSpeak(); } catch (e) { }
+    try { NATIVE && NATIVE.stopGuide && NATIVE.stopGuide(); } catch (e) { lumiLog(e); }
+    try { NATIVE && NATIVE.stopSpeak && NATIVE.stopSpeak(); } catch (e) { lumiLog(e); }
     S.guide = null; store("guide", null);
     dropPipMap();
     var g = $("#guide"); if (g) g.remove();
@@ -1280,7 +1280,7 @@
     footFetch(a, b, function (pts) {
       if (!pts) return;
       FOOT[k].pts = pts; FOOTVER++; paintGuideMap(S.guideSt);
-      (FOOT[k].cbs || []).forEach(function (f) { try { f(pts); } catch (e) { } }); FOOT[k].cbs = [];
+      (FOOT[k].cbs || []).forEach(function (f) { try { f(pts); } catch (e) { lumiLog(e); } }); FOOT[k].cbs = [];
     });
     return null;
   }
@@ -1390,8 +1390,8 @@
     } else if (T.me) { T.me.remove(); T.me = null; }
     T.map = map; T.followMode = follow;
     if (!target) {
-      if (follow) { try { map.fitBounds(T.layer.getBounds(), { padding: [16, 16], maxZoom: 17 }); } catch (e) { } }
-      else if (!T.fitted) { T.fitted = true; try { map.fitBounds(T.layer.getBounds(), { padding: [30, 30], maxZoom: 17 }); } catch (e) { } }
+      if (follow) { try { map.fitBounds(T.layer.getBounds(), { padding: [16, 16], maxZoom: 17 }); } catch (e) { lumiLog(e); } }
+      else if (!T.fitted) { T.fitted = true; try { map.fitBounds(T.layer.getBounds(), { padding: [30, 30], maxZoom: 17 }); } catch (e) { lumiLog(e); } }
       return;
     }
     if (!follow) hookTripMapFollow();
@@ -1467,7 +1467,7 @@
       b.style.transform = "rotate(" + Math.round(u) + "deg)";
     });
   };
-  function compass(on) { try { NATIVE && NATIVE.compass && NATIVE.compass(!!on); } catch (e) { } }
+  function compass(on) { try { NATIVE && NATIVE.compass && NATIVE.compass(!!on); } catch (e) { lumiLog(e); } }
   function guideRouteMeters(st) {
     if (!(st.metersLeft >= 0) || !st.lat || !LIVEW || !LIVEW.pts) return null;
     var tgt = LIVEW.tk.split(","), b = [+tgt[0], +tgt[1]];
@@ -1477,7 +1477,7 @@
   function renderGuide(st) {
     if (st && cfg().voice && (st.text || st.title)) {
       var say = (st.title ? st.title + ". " : "") + (st.text || "");
-      if (say !== S._voice) { S._voice = say; try { if (NATIVE && NATIVE.speak) NATIVE.speak(say); } catch (e) { } }
+      if (say !== S._voice) { S._voice = say; try { if (NATIVE && NATIVE.speak) NATIVE.speak(say); } catch (e) { lumiLog(e); } }
     }
     var g = $("#guide");
     if (!g) {
@@ -1486,7 +1486,7 @@
       $("#app").appendChild(g);
       g.addEventListener("click", function (e) {
         if (e.target.closest(".guide-stop")) { e.stopPropagation(); stopGuide(); toast("Pendampingan dihentikan"); return; }
-        if (e.target.closest(".guide-pip")) { e.stopPropagation(); try { NATIVE.enterPip(); } catch (x) { } return; }
+        if (e.target.closest(".guide-pip")) { e.stopPropagation(); try { NATIVE.enterPip(); } catch (x) { lumiLog(x); } return; }
         if (S.guide && S.guide.it) openTrip(S.guide.it);
       });
     }
@@ -1505,7 +1505,7 @@
       (counts && !st.done ? '<div class="guide-count">' + counts + "</div>" : "");
     if (st.alert) {
       g.classList.add("alert");
-      try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch (e) { }
+      try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch (e) { lumiLog(e); }
       clearTimeout(alertTimer); alertTimer = setTimeout(function () { g.classList.remove("alert"); }, 8000);
     }
     // posisi + sisa rute di peta perjalanan
@@ -1525,11 +1525,11 @@
     if (!GT.pip.map) return;
     var m = GT.pip.map; GT.pip.map = null; GT.pip.layer = null; GT.pip.me = null; GT.pip.pos = null; GT.pip.anim = null; GT.pip.sig = null;
     allMaps = allMaps.filter(function (x) { return x !== m; });
-    try { m.remove(); } catch (e) { }
+    try { m.remove(); } catch (e) { lumiLog(e); }
   }
   function refitMaps() {
     // Peta yang sedang tersembunyi (mis. peta perjalanan saat PiP) jangan diukur: ukurannya 0 dan merusak tampilan.
-    allMaps.forEach(function (m) { try { if (m.getContainer().offsetWidth) m.invalidateSize(false); } catch (e) { } });
+    allMaps.forEach(function (m) { try { if (m.getContainer().offsetWidth) m.invalidateSize(false); } catch (e) { lumiLog(e); } });
     paintGuideMap(S.guideSt);
   }
   window.__lumiPip = function (on) {
@@ -1571,15 +1571,15 @@
     return o;
   }
   function applyAccessible() {
-    try { document.body.classList.toggle("is-accessible", !!cfg().accessible); } catch (e) { }
+    try { document.body.classList.toggle("is-accessible", !!cfg().accessible); } catch (e) { lumiLog(e); }
   }
 
   /* ------------------------------------------------------- bahasa (ID/EN) */
   /* Terjemahan ada di js/i18n.js (kamus DOM + LumiI18n). Mengganti bahasa memuat ulang halaman. */
   function tr(s) { return s; }
   function applyLang() {
-    try { document.documentElement.lang = I18.lang || (EN ? "en" : "id"); } catch (e) { }
-    try { NATIVE && NATIVE.setLang && NATIVE.setLang(EN ? "en" : "id"); } catch (e) { }
+    try { document.documentElement.lang = I18.lang || (EN ? "en" : "id"); } catch (e) { lumiLog(e); }
+    try { NATIVE && NATIVE.setLang && NATIVE.setLang(EN ? "en" : "id"); } catch (e) { lumiLog(e); }
   }
 
   /* ------------------------------------------------------- tempat tersimpan (dari Google Maps) */
@@ -2150,7 +2150,7 @@
     return m;
   }
   function applyBasemap() {
-    allMaps.forEach(function (m) { try { if (m._lumiTiles) m.removeLayer(m._lumiTiles); } catch (e) { } m._lumiTiles = baseLayer().addTo(m); });
+    allMaps.forEach(function (m) { try { if (m._lumiTiles) m.removeLayer(m._lumiTiles); } catch (e) { lumiLog(e); } m._lumiTiles = baseLayer().addTo(m); });
   }
   function dotIcon(cls, color) {
     return L.divIcon({ className: "", html: '<div class="' + cls + '" style="--c:' + (color || "#1565D8") + '"></div>', iconSize: cls === "lm-stop" ? [12, 12] : [22, 22], iconAnchor: cls === "lm-stop" ? [6, 6] : [11, 11] });
@@ -2532,7 +2532,7 @@
           if (f) { f.focus(); f.select(); }
         }, 160);
       }
-    } catch (e) { }
+    } catch (e) { lumiLog(e); }
   };
   $("#btnShare").addEventListener("click", function () { shareTrip(S.openTrip); });
   $$("[data-close]").forEach(function (b) { b.addEventListener("click", function () { b.closest(".sheet").hidden = true; }); });
@@ -2781,7 +2781,7 @@
 
   /* ------------------------------------------------------- tentang, update, laporan */
   function appVersion() {
-    try { if (NATIVE && NATIVE.versionName) { var v = NATIVE.versionName(); if (v && v !== "0") return v; } } catch (e) { }
+    try { if (NATIVE && NATIVE.versionName) { var v = NATIVE.versionName(); if (v && v !== "0") return v; } } catch (e) { lumiLog(e); }
     return "2.1";
   }
   function openExt(url) { if (NATIVE && NATIVE.openUrl) NATIVE.openUrl(url); else window.open(url); }
@@ -2818,7 +2818,21 @@
   function reportIssue() {
     var v = appVersion();
     var body = tl("### Apa yang terjadi\n\n\n### Langkah mengulang\n1. \n2. \n\n### Lingkungan\n", "### What happened\n\n\n### Steps to reproduce\n1. \n2. \n\n### Environment\n") + "- Lumi Transport v" + v + "\n- " + (navigator.userAgent || "") + "\n";
-    openExt("https://github.com/VAMvicky/LumiTransport/issues/new?title=" + encodeURIComponent("[v" + v + "] ") + "&body=" + encodeURIComponent(body));
+    // R5: lampirkan galat terakhir (aplikasi web + crash Android) supaya laporan bisa ditindaklanjuti.
+    var pad2 = function (n) { return (n < 10 ? "0" : "") + n; };
+    var errs = (window.lumiErrors ? lumiErrors() : []).slice(-12);
+    if (errs.length) {
+      body += "\n<details><summary>" + tl("Galat terakhir", "Recent errors") + " (" + errs.length + ")</summary>\n\n```\n" + errs.map(function (x) {
+        var d = wibOf(x.t); return pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + (x.n > 1 ? " ×" + x.n : "") + " " + x.m + (x.a ? "  @" + x.a : "");
+      }).join("\n") + "\n```\n</details>\n";
+    }
+    var crash = ""; try { crash = NATIVE && NATIVE.lastCrash ? NATIVE.lastCrash() : ""; } catch (e) { lumiLog(e); }
+    if (crash) body += "\n<details><summary>" + tl("Crash terakhir (Android)", "Last crash (Android)") + "</summary>\n\n```\n" + crash.slice(0, 2500) + "\n```\n</details>\n";
+    var url = "https://github.com/VAMvicky/LumiTransport/issues/new?title=" + encodeURIComponent("[v" + v + "] ") + "&body=";
+    var enc = encodeURIComponent(body);
+    if (enc.length > 7000) enc = encodeURIComponent(body.slice(0, 3000) + "\n…");   // batas panjang URL GitHub
+    openExt(url + enc);
+    try { if (crash && NATIVE.clearCrash) NATIVE.clearCrash(); } catch (e) { lumiLog(e); }
   }
 
   /* ------------------------------------------------------- pilih titik di peta */
@@ -2948,13 +2962,13 @@
     var langSel = $("#setLang");
     if (langSel) langSel.addEventListener("change", function () {
       var c = cfg(); c.lang = this.value === "en" ? "en" : "id"; store("cfg", c);
-      try { NATIVE && NATIVE.setLang && NATIVE.setLang(c.lang); } catch (e) { }
+      try { NATIVE && NATIVE.setLang && NATIVE.setLang(c.lang); } catch (e) { lumiLog(e); }
       // Muat ulang halaman supaya semua layar (termasuk yang sudah dirender) ikut berganti bahasa.
       try {
         sessionStorage.setItem("lumi:reopen", "lang");
         // B9: rute yang sedang dicari ikut dipulihkan setelah muat ulang.
         sessionStorage.setItem("lumi:reopenPlan", JSON.stringify({ from: S.from, to: S.to, time: S.time, results: !$("#results").hidden }));
-      } catch (e) { }
+      } catch (e) { lumiLog(e); }
       location.reload();
     });
     var btnBackup = $("#btnBackup"), btnRestore = $("#btnRestore");
@@ -2968,7 +2982,7 @@
     var voiceBox = $("#setVoice");
     if (voiceBox) voiceBox.addEventListener("change", function () {
       var c = cfg(); c.voice = this.checked; store("cfg", c);
-      if (!this.checked) { try { NATIVE && NATIVE.stopSpeak && NATIVE.stopSpeak(); } catch (e) { } }
+      if (!this.checked) { try { NATIVE && NATIVE.stopSpeak && NATIVE.stopSpeak(); } catch (e) { lumiLog(e); } }
       renderSettings(["voice", "ok", this.checked ? "Panduan suara aktif." : "Panduan suara dimatikan."]);
     });
     var clearTrips = $("#btnClearTrips");
@@ -2993,12 +3007,12 @@
 
   /* Perbarui daftar koreksi titik halte/stasiun (OpenStreetMap) dari GitHub, paling sering tiap 3 hari. */
   (function refreshStopFix() {
-    var last = 0; try { last = +localStorage.getItem("lumi:stopfixAt") || 0; } catch (e) { }
+    var last = 0; try { last = +localStorage.getItem("lumi:stopfixAt") || 0; } catch (e) { lumiLog(e); }
     if (Date.now() - last < 3 * 864e5) return;
     setTimeout(function () {
       http("https://raw.githubusercontent.com/VAMvicky/LumiTransport/main/data/stop_fix.json", 20000).then(function (j) {
-        try { localStorage.setItem("lumi:stopfixAt", String(Date.now())); } catch (e) { }
-        if (j && j.v === 2 && j.fix) { try { localStorage.setItem("lumi:stopfix", JSON.stringify(j)); } catch (e) { } }
+        try { localStorage.setItem("lumi:stopfixAt", String(Date.now())); } catch (e) { lumiLog(e); }
+        if (j && j.v === 2 && j.fix) { try { localStorage.setItem("lumi:stopfix", JSON.stringify(j)); } catch (e) { lumiLog(e); } }
       }).catch(function () { });
     }, 8000);
   })();
@@ -3097,7 +3111,7 @@
     ok: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#34C27A"/><path d="m7.5 12.3 3 3 6-6.3" fill="none" stroke="#0B2545" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
   };
   function permState() {
-    try { if (NATIVE && NATIVE.permState) return JSON.parse(NATIVE.permState()); } catch (e) { }
+    try { if (NATIVE && NATIVE.permState) return JSON.parse(NATIVE.permState()); } catch (e) { lumiLog(e); }
     return { loc: false, notif: false, battery: false, oem: true, browser: true };
   }
   function showOnboarding(step) {
@@ -3182,16 +3196,16 @@
         setTimeout(function () { var sel = $("#setLang"); if (sel) sel.closest(".set-card").scrollIntoView({ block: "center" }); toast(tl("Bahasa disetel ke Indonesia.", "Language set to English.")); }, 120);
       }
     }
-  } catch (e) { }
+  } catch (e) { lumiLog(e); }
   syncTimeChip();
   renderIntro();
   renderGtfsBanner();
-  try { var pend = NATIVE && NATIVE.takeShared && NATIVE.takeShared(); if (pend) window.lumiShared(pend); } catch (e) { }
+  try { var pend = NATIVE && NATIVE.takeShared && NATIVE.takeShared(); if (pend) window.lumiShared(pend); } catch (e) { lumiLog(e); }
   // Pendampingan yang masih berjalan (mis. setelah aplikasi dibuka ulang dari notifikasi).
   try {
     var gs = NATIVE && NATIVE.guideState && NATIVE.guideState();
     if (gs) { compass(true); var sg0 = store("guide"); S.guide = sg0 ? { title: sg0.title, names: sg0.names } : { names: [] }; var st0 = JSON.parse(gs); renderGuide(st0.title ? st0 : { title: "Pendampingan berjalan", text: "Menunggu posisi GPS…", stopsLeft: -1, metersLeft: -1 }); }
     else store("guide", null);
-  } catch (e) { }
-  try { var op = NATIVE && NATIVE.takeOpen && NATIVE.takeOpen(); if (op) window.lumiOpen(op); } catch (e) { }
+  } catch (e) { lumiLog(e); }
+  try { var op = NATIVE && NATIVE.takeOpen && NATIVE.takeOpen(); if (op) window.lumiOpen(op); } catch (e) { lumiLog(e); }
 })();

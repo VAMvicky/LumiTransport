@@ -82,6 +82,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CrashLog.install(this);
         Lang.load(this);
         pendingShortcut = getIntent() == null ? null : getIntent().getStringExtra("lumi_shortcut");
         Window w = getWindow();
@@ -846,6 +847,14 @@ public class MainActivity extends Activity {
             try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; }
             catch (Exception e) { return "0"; }
         }
+
+        /** Crash terakhir di sisi Android (untuk laporan bug); "" bila tidak ada. */
+        @JavascriptInterface
+        public String lastCrash() { return CrashLog.read(MainActivity.this); }
+
+        /** Hapus catatan crash setelah laporan dibuat. */
+        @JavascriptInterface
+        public void clearCrash() { CrashLog.clear(MainActivity.this); }
 
         /** Panduan suara: ucapkan teks pendampingan. */
         @JavascriptInterface
