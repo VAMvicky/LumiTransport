@@ -92,9 +92,14 @@ public class MainActivity extends Activity {
             w.setStatusBarColor(Color.TRANSPARENT);
             w.setNavigationBarColor(Color.TRANSPARENT);
             w.setNavigationBarContrastEnforced(false);
-            android.view.WindowInsetsController c = w.getInsetsController();
-            if (c != null) c.setSystemBarsAppearance(android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-                    android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+            // v2.13.1: Window.getInsetsController() membaca mDecor langsung; sebelum decor dibuat
+            // nilainya null → crash saat aplikasi dibuka (Android 11–14). Buat decor dulu lewat
+            // getDecorView(), lalu minta controller dari view-nya, dan jangan biarkan gagal di sini.
+            try {
+                android.view.WindowInsetsController c = w.getDecorView().getWindowInsetsController();
+                if (c != null) c.setSystemBarsAppearance(android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+            } catch (Exception ignored) { }
         } else {
             w.setStatusBarColor(Color.parseColor("#4DB6F4"));
             w.setNavigationBarColor(Color.parseColor("#FFFFFF"));

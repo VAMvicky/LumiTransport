@@ -10,6 +10,13 @@
 
 ---
 
+## ✦ v2.13.1 — 10 November 2026 / 10 November 2026
+
+- 🇮🇩 Perbaikan: aplikasi 2.13 langsung tertutup saat dibuka di Android 11–14 (controller system bar diminta sebelum jendela siap). `versionCode` **21301**
+- 🇬🇧 Fix: 2.13 crashed on launch on Android 11–14 (system-bar controller requested before the window existed). `versionCode` **21301**
+
+---
+
 ## ✦ v2.13 — 9 November 2026 / 9 November 2026
 
 <details open>
