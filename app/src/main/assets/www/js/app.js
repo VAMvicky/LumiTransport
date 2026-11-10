@@ -37,8 +37,11 @@
     var raw = null;
     try { raw = window.LumiNative && window.LumiNative.getRouteData && window.LumiNative.getRouteData(); } catch (e) { lumiLog(e); }
     if (!raw) { try { raw = localStorage.getItem("lumi:gtfsTest"); } catch (e) { lumiLog(e); } }   // untuk uji di browser
-    if (!raw) return;
-    var g; try { g = JSON.parse(raw); } catch (e) { return; }
+    // R6: belum ada unduhan → pakai ringkasan GTFS resmi yang ikut di APK (js/gtfs.js).
+    var g = null, bundled = false;
+    if (raw) { try { g = JSON.parse(raw); } catch (e) { lumiLog(e, "gtfs"); } }
+    if (!g && window.LUMI_GTFS) { g = window.LUMI_GTFS; bundled = true; }
+    window.LUMI_GTFS = null;   // lepaskan memori; DATA.lines sudah memegang yang dipakai
     if (!g || !g.lines || !g.lines.length) return;
     var MAIN = {}; for (var i = 1; i <= 14; i++) MAIN[String(i)] = 1;
     var M24 = { JAK36: 1, JAK47: 1, JAK52: 1, JAK75: 1 };
@@ -142,7 +145,7 @@
     for (var k in replaced) lines.push(replaced[k]);
     DATA.lines = lines;
     var n = 0; lines.forEach(function (l) { if (/^GTFS resmi/.test(String(l.note).replace("Halte: ", ""))) n++; });
-    ROUTE_SRC = { kind: "gtfs", date: g.date, count: g.lines.length };
+    ROUTE_SRC = { kind: "gtfs", date: g.date, count: g.lines.length, bundled: bundled };
   })();
   /*
    * Titik halte/stasiun diselaraskan dengan OpenStreetMap (peta yang kamu lihat). Berlaku untuk data bawaan
@@ -2758,7 +2761,7 @@
       "Batas tarif motor mengacu pada KP Menhub 564/2022 (masih berlaku; Perpres 27/2026 menetapkan potongan aplikasi 8% dan tarif baru akan diatur Kemenhub). Harga akhir ditentukan aplikasi dan bisa naik saat jam sibuk atau hujan.");
     html += '<div class="info-card src"><h3>Sumber data rute</h3><ul>' +
       "<li>Daftar & kode rute Transjakarta: <a data-url=\"https://transjakarta.co.id/rute\">transjakarta.co.id/rute</a> (diakses 10 Okt 2026).</li>" +
-      (ROUTE_SRC.kind === "gtfs" ? "<li><b>Aktif:</b> " + tl("GTFS resmi Transjakarta diunduh " + esc(ROUTE_SRC.date) + " (" + ROUTE_SRC.count + " rute).", "official Transjakarta GTFS downloaded " + esc(ROUTE_SRC.date) + " (" + ROUTE_SRC.count + " routes).") + "</li>" : "") +
+      (ROUTE_SRC.kind === "gtfs" ? "<li><b>Aktif:</b> " + (ROUTE_SRC.bundled ? tl("GTFS resmi Transjakarta " + esc(ROUTE_SRC.date) + ", bawaan aplikasi (" + ROUTE_SRC.count + " rute).", "official Transjakarta GTFS of " + esc(ROUTE_SRC.date) + ", built into the app (" + ROUTE_SRC.count + " routes).") : tl("GTFS resmi Transjakarta diunduh " + esc(ROUTE_SRC.date) + " (" + ROUTE_SRC.count + " rute).", "official Transjakarta GTFS downloaded " + esc(ROUTE_SRC.date) + " (" + ROUTE_SRC.count + " routes).")) + "</li>" : "") +
       "<li>Halte & rute BRT Transjakarta: GTFS resmi Transjakarta (unduhan 26 Jan 2024) via <a data-url=\"https://github.com/altilunium/BRT-tj\">altilunium/BRT-tj</a>.</li>" +
       "<li>Rute non-BRT, Mikrotrans, Royaltrans: GTFS Transjakarta 2021 via <a data-url=\"https://github.com/akherlan/transjakartagtfs\">akherlan/transjakartagtfs</a> — sebagian rute mungkin sudah berubah.</li>" +
       "<li>Koordinat stasiun KA: data sarana prasarana Kemenhub via <a data-url=\"https://github.com/Rebornian48/map-visualizer\">Rebornian48/map-visualizer</a>.</li>" +
@@ -2907,8 +2910,8 @@
   function gtfsCardHTML(compact) {
     var updated = ROUTE_SRC.kind === "gtfs";
     return '<div class="gtfs-card"><b>' + (updated ? "Data rute: GTFS resmi Transjakarta" : "Perbarui rute Transjakarta") + "</b>" +
-      "<p>" + (updated ? tl("Diunduh " + esc(ROUTE_SRC.date) + " · " + ROUTE_SRC.count + " rute. Lumi memeriksa data resmi secara berkala dan memberi tahu bila ada rute yang berubah.",
-          "Downloaded " + esc(ROUTE_SRC.date) + " · " + ROUTE_SRC.count + " routes. Lumi checks the official data regularly and tells you when a route changes.") :
+      "<p>" + (updated ? tl((ROUTE_SRC.bundled ? "Bawaan aplikasi, data " : "Diunduh ") + esc(ROUTE_SRC.date) + " · " + ROUTE_SRC.count + " rute. Lumi memeriksa data resmi secara berkala dan memberi tahu bila ada rute yang berubah.",
+          (ROUTE_SRC.bundled ? "Built into the app, data of " : "Downloaded ") + esc(ROUTE_SRC.date) + " · " + ROUTE_SRC.count + " routes. Lumi checks the official data regularly and tells you when a route changes.") :
         "Data bawaan memakai halte BRT 2024 dan rute non-BRT 2021, sehingga sebagian rute (mis. 9H, T31, P11) belum ada/sesuai. Lumi mengunduh GTFS resmi Transjakarta otomatis; tekan tombol di bawah bila belum berhasil.") + "</p>" +
       '<button class="btn-go gtfs-btn">' + (updated ? "Perbarui lagi" : "Unduh data rute resmi") + '</button><div class="gtfs-status"></div></div>';
   }

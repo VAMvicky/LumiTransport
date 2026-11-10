@@ -20,7 +20,7 @@
       window.lumiLog = function (e, where) {
         if (!e) return;
         var msg = String(e && e.message || e).slice(0, 200);
-        var at = where || ((String(e && e.stack || "").split("\n").filter(function (l) { return /\.js/.test(l); })[0] || "").replace(/^.*\/(js|vendor)\//, "$1/").replace(/[()\s]/g, "").slice(0, 80);
+        var at = where || (String(e && e.stack || "").split("\n").filter(function (l) { return /\.js/.test(l); })[0] || "").replace(/^.*\/(js|vendor)\//, "$1/").replace(/[()\s]/g, "").slice(0, 80);
         var last = log[log.length - 1];
         if (last && last.m === msg && last.a === at) { last.n = (last.n || 1) + 1; last.t = Date.now(); }
         else { log.push({ t: Date.now(), m: msg, a: at }); if (log.length > 100) log.splice(0, log.length - 100); }
@@ -279,6 +279,7 @@
   <script src="vendor/maplibre-gl.js"></script>
   <script src="vendor/leaflet-maplibre-gl.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/gtfs.js"></script>
   <script src="js/stopfix.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/live.js"></script>

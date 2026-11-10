@@ -174,7 +174,11 @@ async def main():
         await pg.fill("#inStop", "zzzz"); await grab("stops-empty")
         await pg.fill("#inStop", "Monas"); await pg.wait_for_timeout(200)
         await pg.evaluate("document.querySelector('#stopList .stop-row') && document.querySelector('#stopList .stop-row').click()")
+        await pg.wait_for_timeout(600); await grab("stop-sheet")
+        # Lembar aksi halte (Berangkat dari sini / Pergi ke sini / Lihat posisi bus)
+        await pg.evaluate("() => { const s = document.querySelector('#sheetStop'); if (s && !s.hidden) { const b = document.querySelector('#stopActLive'); if (b && !b.hidden) b.click(); else s.hidden = true; } }")
         await pg.wait_for_timeout(1200); await grab("stop-live")
+        await pg.evaluate("() => { const s = document.querySelector('#sheetStop'); if (s) s.hidden = true; }")
         await pg.evaluate("document.querySelector('#sheetLive').hidden = true")
         await pg.click('.nav-btn[data-tab="info"]'); await grab("info", True)
         await pg.click('.nav-btn[data-tab="history"]'); await grab("history", True)
@@ -206,8 +210,9 @@ async def main():
         await pg.click("#pickOk"); await grab("pick-ok")
 
         names = await pg.evaluate("""() => { const s = new Set(); for (const l of __lumiDebug.data.lines) { s.add(l.code); s.add(l.name); for (const d of l.dirs) { if (d.h) s.add(d.h); for (const x of d.s) s.add(x.n); } } return [...s]; }""")
+        swallowed = await pg.evaluate("() => window.lumiErrors ? lumiErrors() : []")
         await b.close()
-        return errs, names
+        return errs, names, swallowed
 
 # Kata Indonesia yang tidak boleh muncul di mode Inggris (di luar nama tempat/rute).
 ID = set("""dan di ke dari yang untuk tidak belum sudah naik turun halte stasiun jalan kaki cari pilih tempat lagi mnt menit jam semua buka tutup hapus simpan pakai lihat izin izinkan lokasi rute tarif peta kereta pindah tiba berangkat sekarang arah menuju berikutnya pemberhentian perjalanan pengaturan bahasa aplikasi ketuk gratis bayar dengan atau bisa akan saat ini itu kamu oleh pada sampai tanpa lewat mulai selesai gagal memuat resmi diunduh perubahan baru dihapus berubah sebelum sesudah pendampingan ojol mobil motor sekitar besok pukul operasional beroperasi transportasi umum angkutan pilihan opsi termurah tercepat minim rekomendasi moda bersihkan ubah riwayat favorit cadangan pulihkan aksesibel suara panduan tentang lisensi laporkan masalah versi terbaru tersedia memeriksa mengunduh menghubungkan terhubung menunggu posisi armada penumpang tersimpan nama titik asal tujuan alamat tautan koordinat terbaca geser letakkan langsung diterima jadikan lainnya tampilkan sembunyikan kartu biru bawah hanya juga sebagian mungkin sesuai bila tiap setiap hari bulan ongkos ongkosnya disimpan diperbarui berhenti varian memutar pola tunggu termasuk sibuk libur maks mis dll sejak hingga lintas koridor pengumpan wisata rusun bawaan unduh perbarui tampil gambar bagikan salin mengerti oke dibagikan disetel dimatikan aktif layanan sinyal lemah coba ditolak diperlukan kosong terputus jaringan tamu ditutup kode menolak""".split())
@@ -238,8 +243,11 @@ def untranslated(rows, names):
 
 if __name__ == "__main__":
     if SHOTS: os.makedirs(SHOTS, exist_ok=True)
-    errs, names = asyncio.run(main())
+    errs, names, swallowed = asyncio.run(main())
     print(f"{len(OUT)} teks dari semua layar ({LANG}{', native' if NATIVE else ''})")
+    if swallowed:   # informasi saja: galat yang ditangkap try/catch (lihat lumiLog di index.html)
+        print(f"{len(swallowed)} galat tertangkap (catatan lumiLog):")
+        for x in swallowed[-15:]: print(f"  ×{x.get('n', 1)} {x['m']}  @{x.get('a', '')}")
     fail = False
     if errs:
         fail = True

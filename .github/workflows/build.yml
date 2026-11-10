@@ -29,8 +29,11 @@ jobs:
       - name: Test skema versi (gagal = build merah)
         run: bash tools/test_version.sh
 
-      - name: Bangun data rute
-        run: python3 tools/build_data.py
+      - name: Bangun data rute (dengan GTFS resmi terbaru)
+        run: |
+          set -euo pipefail
+          git fetch -q --depth=1 origin gtfs-data && git show FETCH_HEAD:tj_gtfs.json > data-raw/tj_gtfs.json
+          python3 tools/build_data.py
 
       - name: Cek sintaks JavaScript
         run: for f in app/src/main/assets/www/js/*.js; do node --check "$f"; done
@@ -113,6 +116,13 @@ jobs:
             echo "KS_PASS=$KS_PASS"
             echo "KS_ALIAS=${KS_ALIAS:-lumi}"
           } >> "$GITHUB_ENV"
+
+      - name: Ambil ringkasan GTFS resmi terbaru (ikut di APK)
+        run: |
+          set -euo pipefail
+          git fetch -q --depth=1 origin gtfs-data
+          git show FETCH_HEAD:tj_gtfs.json > data-raw/tj_gtfs.json
+          ls -la data-raw/tj_gtfs.json
 
       - name: Build release (R8 + shrinkResources) + lint
         run: |
@@ -199,6 +209,16 @@ jobs:
             echo "::error::baseline profile tidak dikemas AGP"
             exit 1
           fi
+
+      - name: Ringkasan lint
+        if: always()
+        run: |
+          if [ -f app/lint-baseline.xml ] && ! git ls-files --error-unmatch app/lint-baseline.xml >/dev/null 2>&1; then
+            echo "::warning::lint-baseline.xml baru dibuat; salin isinya ke repo (app/lint-baseline.xml)."
+            echo "----- BASELINE-MULAI -----"; cat app/lint-baseline.xml; echo "----- BASELINE-SELESAI -----"
+          fi
+          R=app/build/reports/lint-results-release.txt
+          [ -f "$R" ] && tail -5 "$R" | tee -a "$GITHUB_STEP_SUMMARY" || true
 
       - name: Upload laporan lint
         if: always()

@@ -69,6 +69,8 @@ android {
         checkReleaseBuilds false          // lint jalan sebagai langkah CI tersendiri, bukan di tiap assemble
         abortOnError true
         baseline = file("lint-baseline.xml")
+        textReport true
+        textOutput file("build/reports/lint-results-release.txt")
         fatal "NewApi", "MissingPermission", "JavascriptInterface", "AddJavascriptInterface"
         disable "GradleDependency", "OldTargetApi", "NewerVersionAvailable", "AndroidGradlePluginVersion"
     }
