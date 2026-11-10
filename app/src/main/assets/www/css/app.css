@@ -891,3 +891,19 @@ html[lang="en"] .st-body.is-now .st-place::after { content: "You are here"; }
 .set-card.set-card .restore-box { display: block; margin: 12px 0 0; font-family: inherit; font-size: 13.5px; line-height: 1.45; padding: 11px 12px; border-radius: 12px; resize: vertical; }
 .set-card.set-card .set-actions { margin-top: 12px; }
 .set-card.set-card .chg-list { margin-top: 8px; }
+
+/* ===================================================================== v2.13.2 */
+/* Sambutan belum selesai: beranda tidak boleh tampil sekilas saat halaman dimuat. */
+html.ob-pending body { background: #0B2545; }
+html.ob-pending #app > :not(#onboard) { visibility: hidden; }
+
+/* Chip rute di layar bus langsung: bisa diketuk untuk memfilter, angka = bus dalam 2 km */
+.live-routes { display: flex; flex-wrap: wrap; gap: 6px; }
+.live-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px 3px 3px; border-radius: 999px; background: #fff;
+  border: 1.5px solid var(--line); font: inherit; cursor: pointer; }
+.live-chip .badge { margin: 0; }
+.live-chip i { font-style: normal; font-weight: 800; font-size: 12px; color: var(--ink-soft); min-width: 10px; text-align: center; }
+.live-chip.none { opacity: .45; padding-right: 3px; }
+.live-chip.on { border-color: var(--ink); box-shadow: 0 0 0 2px rgba(21, 101, 216, .25); opacity: 1; }
+.live-filter { margin: 10px 2px 0; font-size: 13.5px; color: var(--muted); }
+.live-filter .link { font-size: 13.5px; padding: 0; }

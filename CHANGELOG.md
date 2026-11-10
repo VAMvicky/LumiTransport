@@ -10,6 +10,13 @@
 
 ---
 
+## ✦ v2.13.2 — 10 November 2026 / 10 November 2026
+
+- 🇮🇩 Bus langsung: posisiku ikut bergerak + senter arah, filter per kode rute, chip berisi jumlah bus sekitar, label kode seragam (JAK71). Perkiraan tiba dihitung juga dari posisi bus di rute dan dibandingkan dengan ETA feed. Perbaikan: sambutan tidak berkedip ke beranda, garis pendampingan tidak berkedip. `versionCode` **21302**
+- 🇬🇧 Live buses: my position follows with a heading beam, per-route filter, chips with nearby bus counts, consistent route codes (JAK71). Arrival estimates are now also computed from the bus position along the route and checked against the feed ETA. Fixes: welcome screen no longer flashes the home screen; guidance lines no longer flicker. `versionCode` **21302**
+
+---
+
 ## ✦ v2.13.1 — 10 November 2026 / 10 November 2026
 
 - 🇮🇩 Perbaikan: aplikasi 2.13 langsung tertutup saat dibuka di Android 11–14 (controller system bar diminta sebelum jendela siap). `versionCode` **21301**
