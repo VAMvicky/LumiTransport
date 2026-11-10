@@ -793,15 +793,24 @@
     return out;
   };
 
+  /*
+   * Moda/kelompok yang TUTUP pada menit m. Satu kelompok hanya disebut tutup bila SEMUA rutenya tutup
+   * (dulu: satu rute wisata yang belum buka pukul 08.00 membuat "Transjakarta non-BRT" seolah tutup semua).
+   * Bus wisata (jam terbatas, bukan angkutan harian) tidak diumumkan.
+   */
   Planner.prototype.closedAt = function (m) {
-    var seen = {}, out = [];
+    var g = {}, order = [];
     this.lines.forEach(function (l) {
-      if (l.noStops || openAt(l, m)) return;
-      var k = l.mode === "TJ" ? (l.brt ? "Transjakarta BRT (selain koridor 1–14)" : "Transjakarta non-BRT") :
-        l.mode === "MIKRO" ? "Mikrotrans (kecuali JAK36/47/52/75)" : MODES[l.mode].label;
-      if (!seen[k]) { seen[k] = 1; out.push(k); }
+      if (l.noStops) return;
+      var code = String(l.code || "").toUpperCase().replace(/\W/g, "");
+      var k = l.mode === "TJ" ? (l.main ? "" : l.brt ? "Transjakarta BRT (selain koridor 1–14)" : l.cat === "WISATA" ? "" : "Transjakarta non-BRT") :
+        l.mode === "MIKRO" ? (/^JAK(36|47|52|75)$/.test(code) ? "" : "Mikrotrans (kecuali JAK36/47/52/75)") : MODES[l.mode].label;
+      if (!k) return;
+      if (!g[k]) { g[k] = { n: 0, shut: 0 }; order.push(k); }
+      g[k].n++;
+      if (!openAt(l, m)) g[k].shut++;
     });
-    return out;
+    return order.filter(function (k) { return g[k].shut === g[k].n; });
   };
 
   var api = { Planner: Planner, MODES: MODES, RAIL: RAIL, hav: hav, openAt: openAt, isNight: isNight, ojolMotor: ojolMotor, ojolCar: ojolCar, ojolMinutes: ojolMinutes, useFares: useFares, fares: function () { return FARES; } };

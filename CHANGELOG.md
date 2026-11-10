@@ -10,6 +10,13 @@
 
 ---
 
+## ✦ v2.13.4 — 10 November 2026 / 10 November 2026
+
+- 🇮🇩 Perapian hasil audit: GTFS resmi Transjakarta & koreksi titik OSM ikut di aplikasi (semua rute langsung lengkap), tarif satu sumber yang bisa diperbarui dari repo, data jarak jauh divalidasi, peta & layanan pihak ketiga punya cadangan, laporan bug melampirkan galat terakhir, sambutan & judul hasil tidak terjepit, ikon bertema. CI: hanya Gradle, lint, uji semua layar + terjemahan, action dikunci SHA. `versionCode` **21304**
+- 🇬🇧 Audit tidy-up: official Transjakarta GTFS and OSM stop fixes bundled in the app (every route complete out of the box), single-source fares updatable from the repo, remote data validated, fallbacks for the map and third-party services, bug reports include recent errors, welcome screen and results title no longer cramped, themed icon. CI: Gradle only, lint, all-screens + translation check, actions pinned to SHAs. `versionCode` **21304**
+
+---
+
 ## ✦ v2.13.3 — 10 November 2026 / 10 November 2026
 
 - 🇮🇩 Perbaikan hasil audit: lokasi lebih tepat (cache lama tidak dipakai, GPS + jaringan bersamaan) dan posisi di bus langsung dikirim terus-menerus; semua waktu memakai WIB; daftar bus langsung tidak melompat saat digulir; ganti bahasa tidak menghapus pencarian; teks "tiap jam" → "berkala"; alat debug mati di rilis. CI: uji mesin rute dengan pemeriksaan, uji asap emulator, rilis wajib bertanda tangan resmi. `versionCode` **21303**
