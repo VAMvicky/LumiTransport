@@ -21,6 +21,11 @@ import csv, json, math, os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(ROOT, "data-raw")
 OUT = os.path.join(ROOT, "app", "src", "main", "assets", "www", "js", "data.js")
+# Mode mentah untuk tools/osm_stops.py: koordinat asli (tanpa koreksi OSM) ditulis ke file lain,
+# supaya koreksi selalu dihitung dari titik asli dan tidak "hilang" saat dihitung ulang.
+RAW_OUT = os.environ.get("LUMI_RAW_OUT")
+if RAW_OUT:
+    OUT = RAW_OUT
 
 
 def hav(a, b):
@@ -487,7 +492,7 @@ for l in lines:
 # R7: titik halte/stasiun yang sudah dicocokkan dengan OpenStreetMap (data/stop_fix.json, tools/osm_stops.py)
 # langsung dipakai di data bawaan. Aturan sama dengan applyStopFix() di app.js: nama sama + ≤80 m dari titik lama.
 FIX_PATH = os.path.join(ROOT, "data", "stop_fix.json")
-STOPFIX = json.load(open(FIX_PATH, encoding="utf-8")) if os.path.exists(FIX_PATH) else None
+STOPFIX = json.load(open(FIX_PATH, encoding="utf-8")) if os.path.exists(FIX_PATH) and not RAW_OUT else None
 fixed = 0
 if STOPFIX and STOPFIX.get("v") == 2:
     for l in lines:
@@ -517,6 +522,8 @@ with open(OUT, "w") as f:
     json.dump({"meta": meta, "fares": FARES, "lines": lines}, f, separators=(",", ":"), ensure_ascii=False)
     f.write(";\n")
 print("OK", OUT, os.path.getsize(OUT), "bytes", meta["counts"])
+if RAW_OUT:
+    sys.exit(0)
 
 # Salinan stop_fix.json terbaru ikut di APK (dipakai juga untuk data GTFS yang diunduh).
 if STOPFIX:
