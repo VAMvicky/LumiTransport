@@ -505,11 +505,16 @@ for l in lines:
     if not l.get("noStops"):
         meta["counts"][l["mode"]] = meta["counts"].get(l["mode"], 0) + 1
 
+# R8: tarif dari satu sumber (data/fares.json)
+FARES = json.load(open(os.path.join(ROOT, "data", "fares.json"), encoding="utf-8"))
+if FARES.get("v") != 1 or not all(k in FARES for k in ("tj", "krl", "mrt", "lrt", "lrtj", "kaBandara", "whoosh", "ojol")):
+    sys.exit("data/fares.json tidak lengkap")
+
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 with open(OUT, "w") as f:
     f.write("/* Dibuat otomatis oleh tools/build_data.py — jangan diedit manual. */\n")
     f.write("window.LUMI_DATA=")
-    json.dump({"meta": meta, "lines": lines}, f, separators=(",", ":"), ensure_ascii=False)
+    json.dump({"meta": meta, "fares": FARES, "lines": lines}, f, separators=(",", ":"), ensure_ascii=False)
     f.write(";\n")
 print("OK", OUT, os.path.getsize(OUT), "bytes", meta["counts"])
 

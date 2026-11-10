@@ -137,7 +137,6 @@ public class RouteUpdater {
     public static void markSeen(Context ctx) { prefs(ctx).edit().putBoolean("unseen", false).apply(); }
 
     static void channel(Context ctx) {
-        if (Build.VERSION.SDK_INT < 26) return;
         Lang.ensure(ctx);
         NotificationChannel c = new NotificationChannel(CH_ROUTES, Lang.t("Perubahan rute", "Route changes"), NotificationManager.IMPORTANCE_DEFAULT);
         c.setDescription(Lang.t("Info bila ada rute Transjakarta yang berubah (dicek tiap hari)", "Alerts when a Transjakarta route changes (checked daily)"));
@@ -159,7 +158,7 @@ public class RouteUpdater {
         open.putExtra("openChanges", true);
         open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pi = PendingIntent.getActivity(ctx, 3, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(ctx, CH_ROUTES) : new Notification.Builder(ctx);
+        Notification.Builder b = new Notification.Builder(ctx, CH_ROUTES);
         b.setSmallIcon(android.R.drawable.ic_popup_sync)
                 .setContentTitle(items.size() + Lang.t(" rute Transjakarta berubah", items.size() == 1 ? " Transjakarta route changed" : " Transjakarta routes changed"))
                 .setContentText(codes.toString())

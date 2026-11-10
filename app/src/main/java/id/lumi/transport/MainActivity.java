@@ -238,12 +238,12 @@ public class MainActivity extends Activity {
         if (pageReady) js("window.__lumiPerm && __lumiPerm(); window.__lumiResume && __lumiResume()");   // kembali dari pengaturan HP
         updatePip(NavService.tracker != null);
         if (NavService.tracker != null) compassOn(true);
-        if (Build.VERSION.SDK_INT >= 26 && !isInPictureInPictureMode()) wasPip = false;   // kembali layar penuh
+        if (!isInPictureInPictureMode()) wasPip = false;   // kembali layar penuh
     }
 
     /* ---- mode PiP (jendela kecil) selama pendampingan ---- */
     private boolean pipSupported() {
-        return Build.VERSION.SDK_INT >= 26 && getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE);
+        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE);
     }
     private android.app.PictureInPictureParams pipParams(boolean auto) {
         android.app.PictureInPictureParams.Builder b = new android.app.PictureInPictureParams.Builder()
@@ -264,7 +264,7 @@ public class MainActivity extends Activity {
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
         // Android 8â€“11: tombol Home saat pendampingan â†’ jendela kecil.
-        if (Build.VERSION.SDK_INT >= 26 && Build.VERSION.SDK_INT < 31 && NavService.tracker != null) enterPip();
+        if (Build.VERSION.SDK_INT < 31 && NavService.tracker != null) enterPip();
     }
     private long pipExitAt, stoppedAt;
     private boolean stopped, wasPip;
@@ -301,13 +301,13 @@ public class MainActivity extends Activity {
         super.onStop();
         stopped = true; stoppedAt = System.currentTimeMillis();
         if (watchL != null) watchStop();   // watchWanted tetap: dilanjutkan di onResume
-        if (Build.VERSION.SDK_INT >= 26 && !isChangingConfigurations() && wasPip && !isInPictureInPictureMode()
+        if (!isChangingConfigurations() && wasPip && !isInPictureInPictureMode()
                 && System.currentTimeMillis() - pipExitAt < 3000) {
             closeFromPip();
             return;
         }
         // Tidak terlihat (bukan PiP): kompas dimatikan agar hemat baterai.
-        if (Build.VERSION.SDK_INT < 24 || !isInPictureInPictureMode()) compassOn(false);
+        if (!isInPictureInPictureMode()) compassOn(false);
     }
 
     /* ---- kompas: arah hadap HP untuk "senter" di titik posisiku ---- */
@@ -339,7 +339,7 @@ public class MainActivity extends Activity {
     }
 
     private boolean hasLoc() {
-        return Build.VERSION.SDK_INT < 23 || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        return checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
     private boolean hasNotif() {
@@ -491,7 +491,7 @@ public class MainActivity extends Activity {
     @SuppressWarnings("MissingPermission")
     private void watchStart() {
         watchStop();
-        if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) return;
         final LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
         if (lm == null) return;
@@ -806,8 +806,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void locate(final String id) {
             main.post(new Runnable() { @Override public void run() {
-                if (Build.VERSION.SDK_INT >= 23 &&
-                        checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                         checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     pendingLocateId = id;
                     requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
@@ -894,13 +893,13 @@ public class MainActivity extends Activity {
         public void startGuide(final String spec, final String title) {
             main.post(new Runnable() { @Override public void run() {
                 java.util.List<String> need = new java.util.ArrayList<String>();
-                if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     need.add(Manifest.permission.ACCESS_FINE_LOCATION);
                     need.add(Manifest.permission.ACCESS_COARSE_LOCATION);
                 }
                 if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED)
                     need.add("android.permission.POST_NOTIFICATIONS");
-                boolean hasLoc = Build.VERSION.SDK_INT < 23 || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                boolean hasLoc = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                         || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
                 if (!need.isEmpty() && (!hasLoc || need.contains("android.permission.POST_NOTIFICATIONS"))) {
                     pendingGuide = new String[]{spec, title};
@@ -983,7 +982,7 @@ public class MainActivity extends Activity {
                     // supaya pengguna tetap bisa mencentang semua izin di layar sambutan.
                     String perm = "loc".equals(kind) ? Manifest.permission.ACCESS_FINE_LOCATION
                             : ("notif".equals(kind) && Build.VERSION.SDK_INT >= 33) ? "android.permission.POST_NOTIFICATIONS" : null;
-                    if (perm != null && Build.VERSION.SDK_INT >= 23) {
+                    if (perm != null) {
                         android.content.SharedPreferences sp = getSharedPreferences("lumi", MODE_PRIVATE);
                         boolean asked = sp.getBoolean("askedPerm_" + kind, false);
                         sp.edit().putBoolean("askedPerm_" + kind, true).apply();
@@ -992,7 +991,7 @@ public class MainActivity extends Activity {
                             return;
                         }
                     }
-                    if ("loc".equals(kind) && Build.VERSION.SDK_INT >= 23) {
+                    if ("loc".equals(kind)) {
                         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_PERM);
                     } else if ("notif".equals(kind)) {
                         if (Build.VERSION.SDK_INT >= 33) requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, REQ_PERM);
@@ -1115,15 +1114,11 @@ public class MainActivity extends Activity {
                     android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                     if (nm == null) return;
                     String ch = "lumi_bus";
-                    if (Build.VERSION.SDK_INT >= 26) {
-                        android.app.NotificationChannel c = new android.app.NotificationChannel(ch, Lang.t("Info bus", "Bus info"), android.app.NotificationManager.IMPORTANCE_HIGH);
-                        c.setDescription(Lang.t("Bus yang kamu tunggu semakin dekat", "The bus you are waiting for is getting close"));
-                        nm.createNotificationChannel(c);
-                    }
+                    android.app.NotificationChannel c = new android.app.NotificationChannel(ch, Lang.t("Info bus", "Bus info"), android.app.NotificationManager.IMPORTANCE_HIGH);
+                    c.setDescription(Lang.t("Bus yang kamu tunggu semakin dekat", "The bus you are waiting for is getting close"));
+                    nm.createNotificationChannel(c);
                     String body = text == null ? "" : text;
-                    android.app.Notification.Builder b = Build.VERSION.SDK_INT >= 26
-                            ? new android.app.Notification.Builder(MainActivity.this, ch)
-                            : new android.app.Notification.Builder(MainActivity.this);
+                    android.app.Notification.Builder b = new android.app.Notification.Builder(MainActivity.this, ch);
                     b.setSmallIcon(android.R.drawable.ic_dialog_info)
                      .setContentTitle(title == null ? Lang.t("Info bus", "Bus info") : title)
                      .setContentText(body)

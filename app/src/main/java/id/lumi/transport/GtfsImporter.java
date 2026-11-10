@@ -106,7 +106,7 @@ public class GtfsImporter {
             r = new BufferedReader(new InputStreamReader(z.getInputStream(e), "UTF-8"), 1 << 16);
             String head = r.readLine();
             if (head == null) throw new IOException(name + " kosong");
-            if (head.startsWith("﻿")) head = head.substring(1);
+            if (head.startsWith("\uFEFF")) head = head.substring(1);
             List<String> h = parseCsv(head);
             for (int i = 0; i < h.size(); i++) col.put(h.get(i).trim(), i);
         }

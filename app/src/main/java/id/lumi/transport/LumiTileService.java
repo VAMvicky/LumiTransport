@@ -24,6 +24,7 @@ public class LumiTileService extends TileService {
         }
     }
 
+    @android.annotation.SuppressLint("StartActivityAndCollapseDeprecated")   // jalur lama hanya untuk Android < 14
     @Override
     public void onClick() {
         super.onClick();

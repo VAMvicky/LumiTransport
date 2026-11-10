@@ -124,7 +124,7 @@ jobs:
           git show FETCH_HEAD:tj_gtfs.json > data-raw/tj_gtfs.json
           ls -la data-raw/tj_gtfs.json
 
-      - name: Build release (R8 + shrinkResources) + lint
+      - name: Build release (R8 + shrinkResources)
         run: |
           set -euo pipefail
           chmod +x gradlew
@@ -140,7 +140,7 @@ jobs:
           fi
           for attempt in 1 2 3 4; do
             echo "::group::Percobaan $attempt ($GRADLE)"
-            if $GRADLE --no-daemon --stacktrace assembleRelease lintRelease -Dlint.baselines.continue=true; then
+            if $GRADLE --no-daemon --stacktrace assembleRelease; then
               echo "::endgroup::"
               exit 0
             fi
@@ -209,6 +209,9 @@ jobs:
             echo "::error::baseline profile tidak dikemas AGP"
             exit 1
           fi
+
+      - name: Android lint (gagal = ada temuan baru di luar app/lint-baseline.xml)
+        run: ./gradlew --no-daemon lintRelease
 
       - name: Ringkasan lint
         if: always()

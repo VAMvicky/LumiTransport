@@ -68,6 +68,7 @@ android {
     lint {
         checkReleaseBuilds false          // lint jalan sebagai langkah CI tersendiri, bukan di tiap assemble
         abortOnError true
+        warningsAsErrors true             // peringatan baru pun menggagalkan CI
         baseline = file("lint-baseline.xml")
         textReport true
         textOutput file("build/reports/lint-results-release.txt")
