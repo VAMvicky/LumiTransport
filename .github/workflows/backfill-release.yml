@@ -82,18 +82,19 @@ jobs:
             cp "$(ls app/build/outputs/apk/release/*.apk | head -1)" "build/LumiTransport-v${{ inputs.version }}.apk"
           fi
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backfill-${{ inputs.version }}
+          path: build/LumiTransport-v*.apk
+          if-no-files-found: error
+
       - name: Terbitkan rilis
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          V="${{ inputs.version }}"
-          APK="build/LumiTransport-v$V.apk"
-          test -f "$APK"
-          gh release create "v$V" "$APK" \
-            --target "${{ inputs.ref }}" \
-            --title "✦ Lumi Transport v$V" \
-            --notes-file "release-notes/v$V.md" \
-            --latest=false || \
-          gh release upload "v$V" "$APK" --clobber
-          gh release view "v$V" --json tagName,url --jq '"rilis: " + .tagName + " " + .url'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          target_commitish: ${{ inputs.ref }}
+          name: "Lumi Transport v${{ inputs.version }}"
+          body_path: release-notes/v${{ inputs.version }}.md
+          files: build/LumiTransport-v${{ inputs.version }}.apk
+          make_latest: "false"
